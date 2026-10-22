@@ -352,7 +352,6 @@ function logWorkout() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Helper to get Gemini API key from window.CONFIG, .env, or localStorage
     async function getApiKey() {
         if (window.CONFIG?.GEMINI_API_KEY && window.CONFIG.GEMINI_API_KEY !== "your_gemini_api_key_here") {
             return window.CONFIG.GEMINI_API_KEY;
@@ -361,7 +360,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return window.ENV.GEMINI_API_KEY;
         }
 
-        // Try reading from .env file (works on local web servers like Live Server, http-server, Vite, etc.)
         try {
             const res = await fetch('.env');
             if (res.ok) {
@@ -381,7 +379,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (_) { }
 
-        // Fallback to localStorage (especially useful for deployed demos on GitHub Pages)
         const storedKey = localStorage.getItem('GEMINI_API_KEY');
         if (storedKey) return storedKey;
 
@@ -452,12 +449,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const sendToGemini = async (userText) => {
-        const apiKey = await getApiKey();
-        if (!apiKey) {
-            promptForApiKey();
-            return;
-        }
-
         appendMessage(userText, "user");
         aiInput.value = "";
 
@@ -466,6 +457,38 @@ document.addEventListener("DOMContentLoaded", () => {
         loadingDiv.innerText = "Thinking...";
         aiMessages.appendChild(loadingDiv);
         aiMessages.scrollTop = aiMessages.scrollHeight;
+
+        // 1. Try Vercel Serverless Function (/api/chat)
+        try {
+            const apiRes = await fetch('/api/chat', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userText })
+            });
+
+            if (apiRes.status !== 404) {
+                const apiData = await apiRes.json();
+                if (loadingDiv.parentNode) aiMessages.removeChild(loadingDiv);
+
+                if (apiRes.ok && apiData.reply) {
+                    appendMessage(apiData.reply, "bot");
+                    return;
+                } else if (apiData.error) {
+                    appendMessage(apiData.error, "bot");
+                    return;
+                }
+            }
+        } catch (e) {
+            // Serverless endpoint not reachable (e.g. running purely on local file system)
+        }
+
+        // 2. Direct client-side fallback (reads config.js, .env, or localStorage)
+        const apiKey = await getApiKey();
+        if (!apiKey) {
+            if (loadingDiv.parentNode) aiMessages.removeChild(loadingDiv);
+            promptForApiKey();
+            return;
+        }
 
         const systemPrompt = "You are the AI assistant inside FitPulse, an Activity Heatmap & Fitness Tracker app. Your role is to answer fitness, workout, and health questions for the user concisely and directly. Always keep your responses very short, clear, and to the point (maximum 2-3 sentences).";
 
