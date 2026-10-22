@@ -1,0 +1,466 @@
+:root {
+    --bg-page: #ffffff;
+    --border-color: #000000;
+    --border-light: #e4e4e7;
+    --text-main: #000000;
+    --text-muted: #71717a;
+    --cell-empty: #f4f4f5;
+    --cell-low: #a1a1aa;
+    --cell-mid: #52525b;
+    --cell-high: #09090b;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+#ai-chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+#ai-chat-messages::-webkit-scrollbar-track {
+    background: #0d0d0d;
+}
+
+#ai-chat-messages::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+.ai-msg-user {
+    align-self: flex-end;
+    background: #ffffff;
+    color: #000000;
+    padding: 10px 14px;
+    border-radius: 8px;
+    max-width: 85%;
+    word-break: break-word;
+}
+
+.ai-msg-bot {
+    align-self: flex-start;
+    background: #222222;
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    max-width: 85%;
+    word-break: break-word;
+}
+
+body {
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+}
+
+.main-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+}
+
+.heatmap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.heatmap-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+}
+
+.intensity-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.legend-label {
+    color: var(--text-muted);
+    margin-right: 0.25rem;
+}
+
+.legend-tag {
+    padding: 0.2rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.tag-low {
+    background: var(--cell-low);
+    color: #000;
+}
+
+.tag-mid {
+    background: var(--cell-mid);
+    color: #fff;
+}
+
+.tag-high {
+    background: var(--cell-high);
+    color: #fff;
+}
+
+.heatmap-card {
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    background: #ffffff;
+    overflow-x: auto;
+}
+
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: 50px repeat(24, 1fr);
+    gap: 5px;
+    align-items: center;
+    min-width: 820px;
+}
+
+.hour-header-cell {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-align: center;
+    padding-bottom: 4px;
+    user-select: none;
+}
+
+.day-label-cell {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text-main);
+    user-select: none;
+}
+
+.cell {
+    height: 24px;
+    background-color: var(--cell-empty);
+    border: 1px solid #e4e4e7;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.cell:hover {
+    outline: none;
+    opacity: 0.85;
+}
+
+.cell.low {
+    background-color: var(--cell-low);
+    border-color: var(--cell-low);
+}
+
+.cell.mid {
+    background-color: var(--cell-mid);
+    border-color: var(--cell-mid);
+}
+
+.cell.high {
+    background-color: var(--cell-high);
+    border-color: var(--cell-high);
+}
+
+.heatmap-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-light);
+}
+
+.month-label {
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.logged-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.exercise-log-box {
+    min-height: 140px;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    background: #ffffff;
+    display: grid;
+    grid-template-columns: 200px 1fr 160px;
+    align-items: center;
+    padding: 1.2rem 1.8rem;
+    position: relative;
+}
+
+.box-image-holder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 110px;
+    border: 1.5px dashed #000000;
+    border-radius: 8px;
+    background: #fafafa;
+    padding: 4px;
+    overflow: hidden;
+}
+
+.box-image-holder img {
+    max-height: 100px;
+    max-width: 180px;
+    object-fit: contain;
+    display: block;
+}
+
+.box-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.box-title-holder {
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+    padding: 0 1rem;
+}
+
+.box-meta-holder {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 1.2rem;
+    color: var(--text-main);
+    justify-self: end;
+}
+
+.box-meta-holder .meta-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.delete-log-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1.3rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+}
+
+.delete-log-btn:hover {
+    color: #000;
+}
+
+.action-box {
+    min-height: 120px;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #ffffff;
+    transition: background 0.15s ease;
+}
+
+.action-box:hover {
+    background: #fafafa;
+}
+
+.plus-symbol {
+    font-size: 3.5rem;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--text-main);
+    user-select: none;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1.5rem;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-card {
+    background: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 460px;
+    padding: 1.8rem;
+}
+
+.modal-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.8rem;
+    margin-bottom: 1.2rem;
+}
+
+.modal-top h3 {
+    font-size: 1.3rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-group select,
+.form-group input {
+    border: 2px solid #000;
+    border-radius: 8px;
+    padding: 0.7rem 0.85rem;
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
+}
+
+.stopwatch-section {
+    border: 2px solid #000;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    background: #fafafa;
+    margin-bottom: 1.2rem;
+}
+
+.stopwatch-display {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 2.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.6rem;
+}
+
+.stopwatch-buttons {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+}
+
+.btn {
+    border: 2px solid #000;
+    background: #fff;
+    color: #000;
+    font-size: 0.9rem;
+    font-weight: 800;
+    padding: 0.55rem 1.1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.btn:hover:not(:disabled) {
+    background: #000;
+    color: #fff;
+}
+
+.btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: #000;
+    color: #fff;
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #27272a;
+}
+
+.tooltip {
+    position: fixed;
+    background: #000000;
+    color: #ffffff;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 6px;
+    pointer-events: none;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+    body {
+        padding: 1.2rem;
+    }
+
+    .exercise-log-box {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .box-image-holder,
+    .box-meta-holder {
+        justify-self: center;
+    }
+}

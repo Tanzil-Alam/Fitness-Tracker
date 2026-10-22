@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Heatmap & Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <div class="heatmap-header">
+            <div>
+                <h1 class="heatmap-title">FitPulse</h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">When you work out across the
+                    week</p>
+            </div>
+            <div class="intensity-legend">
+                <span class="legend-label">Intensity:</span>
+                <span class="legend-tag tag-low">Low</span>
+                <span class="legend-tag tag-mid">Mid</span>
+                <span class="legend-tag tag-high">High</span>
+            </div>
+        </div>
+
+        <div class="heatmap-card">
+            <div class="heatmap-grid" id="heatmap-grid"></div>
+            <div class="heatmap-footer">
+                <div class="month-label" id="month-label">OCTOBER 2026</div>
+            </div>
+        </div>
+
+        <div class="logged-list" id="logged-list"></div>
+
+        <div class="action-box" id="add-box" title="Select an exercise and start tracking">
+            <span class="plus-symbol">+</span>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="workout-modal">
+        <div class="modal-card">
+            <div class="modal-top">
+                <h3>Track Workout</h3>
+                <button type="button" class="modal-close" id="close-modal">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label for="select-exercise">Select an Exercise</label>
+                <select id="select-exercise">
+                    <option value="Push up">Push up</option>
+                    <option value="Squats">Squats</option>
+                    <option value="Plank">Plank</option>
+                    <option value="Pull-ups">Pull-ups</option>
+                    <option value="Deadlift">Deadlift</option>
+                    <option value="Running">Running</option>
+                    <option value="CUSTOM">Custom Exercise...</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="custom-name-row" style="display: none;">
+                <label for="custom-exercise-name">Exercise Name</label>
+                <input type="text" id="custom-exercise-name" placeholder="e.g. Bench Press">
+            </div>
+
+            <div class="stopwatch-section">
+                <div class="stopwatch-display" id="sw-display">00:00:00</div>
+                <div class="stopwatch-buttons">
+                    <button type="button" class="btn" id="btn-start">Start</button>
+                    <button type="button" class="btn" id="btn-pause" disabled>Pause</button>
+                    <button type="button" class="btn" id="btn-reset" disabled>Reset</button>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="btn-log-workout" disabled>Log Exercise (Cant post under
+                30s)</button>
+        </div>
+    </div>
+    <div id="ai-chatbox-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: flex-end;">
+        <div
+            style="width: 380px; max-width: 90%; height: 100%; background: #0d0d0d; color: #ffffff; border-left: 1px solid #333; display: flex; flex-direction: column; font-family: sans-serif; box-shadow: -4px 0 15px rgba(0,0,0,0.5);">
+            <div
+                style="padding: 16px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; background: #141414;">
+                <span style="font-weight: bold; font-size: 16px;">AI Assistant</span>
+                <button id="close-ai-chat"
+                    style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <div id="ai-chat-messages"
+                style="flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+                <div
+                    style="align-self: flex-start; background: #222; padding: 10px 14px; border-radius: 8px; max-width: 85%;">
+                    Hello! I am your AI assistant for FitPulse. How can I help you today?
+                </div>
+            </div>
+            <div style="padding: 12px; border-top: 1px solid #222; display: flex; gap: 8px; background: #141414;">
+                <input type="text" id="ai-chat-input" placeholder="Ask a question..."
+                    style="flex: 1; padding: 10px; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; outline: none; font-size: 14px;">
+                <button id="ai-chat-send"
+                    style="background: #ffffff; color: #000000; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer;">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <div id="ai-assistant-btn"
+        style="position: fixed; bottom: 20px; right: 20px; background-color: #000000; color: #ffffff; border: 2px solid #ffffff; padding: 12px 20px; border-radius: 30px; font-family: sans-serif; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        Ask Ai Assistant</div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
