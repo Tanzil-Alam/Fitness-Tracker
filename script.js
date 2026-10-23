@@ -490,8 +490,15 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const systemPrompt = "You are the AI assistant inside FitPulse, an Activity Heatmap & Fitness Tracker app. Your role is to answer fitness, workout, and health questions for the user concisely and directly. Always keep your responses very short, clear, and to the point (maximum 2-3 sentences).";
+        // Fetch user details for personalized AI answers
+        const uName = localStorage.getItem('userName') || 'User';
+        const uAge = localStorage.getItem('userAge') ? `${localStorage.getItem('userAge')} years old` : 'unspecified age';
+        const uHeight = localStorage.getItem('userHeight') ? `${localStorage.getItem('userHeight')} cm` : 'unspecified height';
+        const uWeight = localStorage.getItem('userWeight') ? `${localStorage.getItem('userWeight')} kg` : 'unspecified weight';
 
+        const systemPrompt = `You are the AI assistant inside FitPulse, an Activity Heatmap & Fitness Tracker app. 
+You are speaking to ${uName} (${uAge}, Height: ${uHeight}, Weight: ${uWeight}).
+Tailor your workout, health, and fitness advice to their body profile. Keep responses concise and direct (2-3 sentences max).`;
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                 method: "POST",

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: monospace;
+        }
+
+        body {
+            background: #fff;
+            color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 320px;
+            border: 1px solid #000;
+            padding: 24px;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .avatar-wrap {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 1px solid #000;
+            object-fit: cover;
+        }
+
+        label.file-btn {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 0.7rem;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.7rem;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            background: #fff;
+            border: 1px solid #000;
+            color: #000;
+            padding: 8px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            outline: none;
+            resize: none;
+        }
+
+        textarea {
+            height: 50px;
+        }
+
+        button {
+            width: 100%;
+            background: #000;
+            color: #fff;
+            border: 1px solid #000;
+            padding: 10px;
+            font-family: monospace;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 8px;
+            font-size: 0.8rem;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <h2 id="form-title">REGISTER</h2>
+
+            <div class="avatar-wrap">
+                <img id="img-preview" class="avatar" src="default-profile.png" alt="Avatar" />
+                <br />
+                <label for="file-input" class="file-btn">CHANGE PHOTO</label>
+                <input type="file" id="file-input" accept="image/*" onchange="handleImage(event)" />
+            </div>
+
+            <div class="field">
+                <label>NAME</label>
+                <input type="text" id="input-name" required />
+            </div>
+
+            <div class="field">
+                <label>EMAIL</label>
+                <input type="email" id="input-email" required />
+            </div>
+
+            <div class="field">
+                <label>BIO</label>
+                <textarea id="input-bio" placeholder="Add bio..."></textarea>
+            </div>
+
+            <button type="submit" id="save-btn">SAVE</button>
+        </form>
+    </div>
+
+    <script>
+        let imgData = localStorage.getItem('userProfileImage') || 'default-profile.png';
+
+        // If already registered, skip login and redirect to profile page automatically
+        if (localStorage.getItem('userRegistered') === 'true') {
+            window.location.href = 'profile.html';
+        }
+
+        function handleImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                imgData = reader.result;
+                document.getElementById('img-preview').src = imgData;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('save-btn');
+            btn.textContent = 'SAVING...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.textContent = 'DONE';
+
+                localStorage.setItem('userJoinedDate', new Date().toISOString());
+                localStorage.setItem('userName', document.getElementById('input-name').value.trim());
+                localStorage.setItem('userEmail', document.getElementById('input-email').value.trim());
+                localStorage.setItem('userBio', document.getElementById('input-bio').value.trim() || 'ADD BIO');
+                localStorage.setItem('userProfileImage', imgData);
+                localStorage.setItem('userRegistered', 'true');
+
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 500);
+            }, 1000);
+        }
+    </script>
+</body>
+
+</html>

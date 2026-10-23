@@ -56,14 +56,17 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    padding: 2rem;
+    padding: 0;
+    margin: 0;
 }
 
 .main-wrapper {
     display: flex;
     flex-direction: column;
     gap: 1.8rem;
+    padding: 2rem;
 }
+
 
 .heatmap-header {
     display: flex;
@@ -463,4 +466,62 @@ body {
     .box-meta-holder {
         justify-self: center;
     }
+}
+
+/* Top Navigation Bar */
+.top-nav {
+    border-bottom: 1px solid #e4e4e7;
+    background: #ffffff;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    height: 48px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+    height: 100%;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: #52525b;
+    font-size: 0.9rem;
+    font-weight: 500;
+    position: relative;
+    padding: 0 0.2rem;
+    height: 100%;
+    transition: color 0.15s ease;
+}
+
+.nav-link:hover {
+    color: #000000;
+}
+
+.nav-link.active {
+    color: #000000;
+    font-weight: 700;
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2.5px;
+    background: #000000;
 }
