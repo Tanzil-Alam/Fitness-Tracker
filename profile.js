@@ -48,7 +48,7 @@ if (onboardingForm) {
         const height = document.getElementById('setup-height').value.trim();
         const weight = document.getElementById('setup-weight').value.trim();
 
-        // Save to localStorage
+        // 1. Save individual fields to localStorage
         localStorage.setItem('userName', name);
         localStorage.setItem('userEmail', email);
         localStorage.setItem('userAge', age);
@@ -56,7 +56,15 @@ if (onboardingForm) {
         localStorage.setItem('userWeight', weight);
         localStorage.setItem('userRegistered', 'true');
 
-        // Reveal profile
+        // 2. Immediately update currentUser and render to screen
+        currentUser.fullname = name;
+        currentUser.username = email ? email.split('@')[0] : name.toLowerCase().replace(/\s+/g, '');
+        currentUser.isLoggedIn = true;
+        saveUserData();
+        loadUserData();
+        renderUserProfile();
+
+        // 3. Reveal profile page
         checkUserRegistration();
     });
 }
@@ -460,9 +468,6 @@ function setupProfileEvents() {
         document.getElementById('input-fullname').value = currentUser.fullname || '';
         document.getElementById('input-username').value = currentUser.username || '';
         document.getElementById('input-bio').value = currentUser.bio || '';
-        document.getElementById('input-website').value = currentUser.website || '';
-        document.getElementById('input-twitter').value = currentUser.twitter || '';
-        document.getElementById('input-instagram').value = currentUser.instagram || '';
         editModal.classList.add('active');
     });
 
@@ -475,9 +480,6 @@ function setupProfileEvents() {
         currentUser.fullname = document.getElementById('input-fullname').value.trim();
         currentUser.username = document.getElementById('input-username').value.trim();
         currentUser.bio = document.getElementById('input-bio').value.trim();
-        currentUser.website = document.getElementById('input-website').value.trim();
-        currentUser.twitter = document.getElementById('input-twitter').value.trim();
-        currentUser.instagram = document.getElementById('input-instagram').value.trim();
 
         saveUserData();
         renderUserProfile();
@@ -485,71 +487,71 @@ function setupProfileEvents() {
     });
 
     // Login / Logout / Register
-    btnAuthToggle.addEventListener('click', () => {
-        if (currentUser.isLoggedIn) {
-            // Logout
-            currentUser.isLoggedIn = false;
-            localStorage.removeItem('userRegistered');
-            saveUserData();
-            renderUserProfile();
-        } else {
-            // Go to login page or open modal
-            window.location.href = 'login.html';
-        }
-    });
-
-    closeAuthBtn.addEventListener('click', () => {
-        authModal.classList.remove('active');
-    });
-
-    authForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const emailOrUser = document.getElementById('auth-email').value.trim();
-        const fullNameInput = document.getElementById('auth-fullname').value.trim();
-
-        currentUser.isLoggedIn = true;
-        if (fullNameInput) {
-            currentUser.fullname = fullNameInput;
-        }
-        if (emailOrUser) {
-            currentUser.username = emailOrUser.split('@')[0];
-        }
-        localStorage.setItem('userRegistered', 'true');
+btnAuthToggle.addEventListener('click', () => {
+    if (currentUser.isLoggedIn) {
+        // Logout
+        currentUser.isLoggedIn = false;
+        localStorage.removeItem('userRegistered');
         saveUserData();
         renderUserProfile();
-        authModal.classList.remove('active');
+    } else {
+        // Go to login page or open modal
+        window.location.href = 'login.html';
+    }
+});
+
+closeAuthBtn.addEventListener('click', () => {
+    authModal.classList.remove('active');
+});
+
+authForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const emailOrUser = document.getElementById('auth-email').value.trim();
+    const fullNameInput = document.getElementById('auth-fullname').value.trim();
+
+    currentUser.isLoggedIn = true;
+    if (fullNameInput) {
+        currentUser.fullname = fullNameInput;
+    }
+    if (emailOrUser) {
+        currentUser.username = emailOrUser.split('@')[0];
+    }
+    localStorage.setItem('userRegistered', 'true');
+    saveUserData();
+    renderUserProfile();
+    authModal.classList.remove('active');
+});
+
+// Tooltip for 24-hr heatmap
+if (grid24) {
+    grid24.addEventListener('mouseover', (e) => {
+        const cell = e.target.closest('.cell');
+        if (!cell) return;
+        const sec = parseInt(cell.dataset.seconds || 0, 10);
+        const timeStr = sec > 0 ? formatDisplayDuration(sec) : '0m';
+        const dayName = cell.dataset.dayName || '';
+        const hourLabel = cell.dataset.hourLabel || '';
+        tooltip.innerHTML = `${dayName}, ${hourLabel} · ${timeStr}`;
+        tooltip.style.display = 'block';
     });
 
-    // Tooltip for 24-hr heatmap
-    if (grid24) {
-        grid24.addEventListener('mouseover', (e) => {
-            const cell = e.target.closest('.cell');
-            if (!cell) return;
-            const sec = parseInt(cell.dataset.seconds || 0, 10);
-            const timeStr = sec > 0 ? formatDisplayDuration(sec) : '0m';
-            const dayName = cell.dataset.dayName || '';
-            const hourLabel = cell.dataset.hourLabel || '';
-            tooltip.innerHTML = `${dayName}, ${hourLabel} · ${timeStr}`;
-            tooltip.style.display = 'block';
-        });
+    grid24.addEventListener('mousemove', (e) => {
+        tooltip.style.left = (e.clientX + 14) + 'px';
+        tooltip.style.top = (e.clientY + 14) + 'px';
+    });
 
-        grid24.addEventListener('mousemove', (e) => {
-            tooltip.style.left = (e.clientX + 14) + 'px';
-            tooltip.style.top = (e.clientY + 14) + 'px';
-        });
-
-        grid24.addEventListener('mouseout', (e) => {
-            if (e.target.closest('.cell')) {
-                tooltip.style.display = 'none';
-            }
-        });
-    }
-
-    // AI Assistant
-    setupAiAssistant();
+    grid24.addEventListener('mouseout', (e) => {
+        if (e.target.closest('.cell')) {
+            tooltip.style.display = 'none';
+        }
+    });
 }
 
-// AI Assistant with Vercel API and local fallback
+// AI Assistant
+setupAiAssistant();
+}
+
+// AI Assistant with Vercel API, local fallback, and chat persistence
 function setupAiAssistant() {
     const aiBtn = document.getElementById("ai-assistant-btn");
     const aiOverlay = document.getElementById("ai-chatbox-overlay");
@@ -559,6 +561,43 @@ function setupAiAssistant() {
     const aiMessages = document.getElementById("ai-chat-messages");
 
     if (!aiBtn || !aiOverlay) return;
+
+    // ---- Chat Persistence (sessionStorage) ----
+    const CHAT_STORAGE_KEY = 'fitpulse_chat_history';
+
+    function saveChatHistory() {
+        if (!aiMessages) return;
+        const msgs = [];
+        aiMessages.querySelectorAll('.ai-msg-user, .ai-msg-bot').forEach(el => {
+            msgs.push({
+                text: el.innerText,
+                sender: el.classList.contains('ai-msg-user') ? 'user' : 'bot'
+            });
+        });
+        sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
+    }
+
+    function restoreChatHistory() {
+        if (!aiMessages) return;
+        try {
+            const saved = sessionStorage.getItem(CHAT_STORAGE_KEY);
+            if (!saved) return;
+            const msgs = JSON.parse(saved);
+            if (!msgs.length) return;
+            // Clear the default welcome message and replace with saved history
+            aiMessages.innerHTML = '';
+            msgs.forEach(m => {
+                const div = document.createElement('div');
+                div.className = m.sender === 'user' ? 'ai-msg-user' : 'ai-msg-bot';
+                div.innerText = m.text;
+                aiMessages.appendChild(div);
+            });
+            aiMessages.scrollTop = aiMessages.scrollHeight;
+        } catch (_) {}
+    }
+
+    // Restore chat on page load
+    restoreChatHistory();
 
     aiBtn.addEventListener("click", () => {
         aiOverlay.style.display = "flex";
@@ -574,6 +613,7 @@ function setupAiAssistant() {
         msgDiv.innerText = text;
         aiMessages.appendChild(msgDiv);
         aiMessages.scrollTop = aiMessages.scrollHeight;
+        saveChatHistory();
     };
 
     const sendToGemini = async (userText) => {
@@ -615,7 +655,12 @@ function setupAiAssistant() {
             return;
         }
 
-        const systemPrompt = "You are the AI assistant inside FitPulse. Keep answers short and fitness-focused.";
+        const uName = localStorage.getItem('userName') || 'User';
+        const uAge = localStorage.getItem('userAge') ? `${localStorage.getItem('userAge')} years old` : 'unspecified age';
+        const uHeight = localStorage.getItem('userHeight') ? `${localStorage.getItem('userHeight')} cm` : 'unspecified height';
+        const uWeight = localStorage.getItem('userWeight') ? `${localStorage.getItem('userWeight')} kg` : 'unspecified weight';
+
+        const systemPrompt = `You are the AI assistant inside FitPulse, an Activity Heatmap & Fitness Tracker app. You are speaking to ${uName} (${uAge}, Height: ${uHeight}, Weight: ${uWeight}). Keep answers short and fitness-focused (2-3 sentences max).`;
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                 method: "POST",

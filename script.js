@@ -40,6 +40,8 @@ function init() {
     buildHeatmap();
     renderLogs();
     updateHeatmapActivity();
+    renderDailyRoutine();
+    renderMonthlyGoals();
     setupEvents();
 }
 
@@ -203,6 +205,7 @@ window.deleteLog = function (id) {
     saveLogs();
     renderLogs();
     updateHeatmapActivity();
+    renderMonthlyGoals();
 };
 
 function setupEvents() {
@@ -348,6 +351,20 @@ function logWorkout() {
     saveLogs();
     renderLogs();
     updateHeatmapActivity();
+
+    try {
+        const todayKey = 'fitpulse_routine_' + new Date().toISOString().slice(0, 10);
+        let completedTasks = JSON.parse(localStorage.getItem(todayKey) || '[]');
+        const currentRoutine = getPersonalizedRoutine();
+        const matchedTask = currentRoutine.find(t => t.name === name);
+        if (matchedTask && !completedTasks.includes(matchedTask.id)) {
+            completedTasks.push(matchedTask.id);
+            localStorage.setItem(todayKey, JSON.stringify(completedTasks));
+        }
+        renderDailyRoutine();
+    } catch (_) {}
+
+    renderMonthlyGoals();
     closeWorkoutModal();
 }
 
@@ -392,6 +409,43 @@ document.addEventListener("DOMContentLoaded", () => {
     const aiInput = document.getElementById("ai-chat-input");
     const aiMessages = document.getElementById("ai-chat-messages");
 
+    // ---- Chat Persistence (sessionStorage) ----
+    const CHAT_STORAGE_KEY = 'fitpulse_chat_history';
+
+    function saveChatHistory() {
+        if (!aiMessages) return;
+        const msgs = [];
+        aiMessages.querySelectorAll('.ai-msg-user, .ai-msg-bot').forEach(el => {
+            msgs.push({
+                text: el.innerText,
+                sender: el.classList.contains('ai-msg-user') ? 'user' : 'bot'
+            });
+        });
+        sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
+    }
+
+    function restoreChatHistory() {
+        if (!aiMessages) return;
+        try {
+            const saved = sessionStorage.getItem(CHAT_STORAGE_KEY);
+            if (!saved) return;
+            const msgs = JSON.parse(saved);
+            if (!msgs.length) return;
+            // Clear the default welcome message and replace with saved history
+            aiMessages.innerHTML = '';
+            msgs.forEach(m => {
+                const div = document.createElement('div');
+                div.className = m.sender === 'user' ? 'ai-msg-user' : 'ai-msg-bot';
+                div.innerText = m.text;
+                aiMessages.appendChild(div);
+            });
+            aiMessages.scrollTop = aiMessages.scrollHeight;
+        } catch (_) {}
+    }
+
+    // Restore chat on page load
+    restoreChatHistory();
+
     if (aiBtn && aiOverlay) {
         aiBtn.addEventListener("click", () => {
             aiOverlay.style.display = "flex";
@@ -410,6 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
         msgDiv.innerText = text;
         aiMessages.appendChild(msgDiv);
         aiMessages.scrollTop = aiMessages.scrollHeight;
+        saveChatHistory();
     };
 
     const promptForApiKey = () => {
@@ -546,3 +601,216 @@ Tailor your workout, health, and fitness advice to their body profile. Keep resp
 });
 
 init();
+
+// Personalized Daily Routine System
+const TODAY_DATE_KEY = 'fitpulse_routine_' + new Date().toISOString().slice(0, 10);
+
+function getPersonalizedRoutine() {
+    const age = parseInt(localStorage.getItem('userAge') || '25', 10);
+    const weight = parseInt(localStorage.getItem('userWeight') || '70', 10);
+
+    if (age >= 50 || weight > 95) {
+        return [
+            { id: 'task_1', name: 'Plank', target: '30 seconds', seconds: 30 },
+            { id: 'task_2', name: 'Squats', target: '45 seconds', seconds: 45 },
+            { id: 'task_3', name: 'Running', target: '1 minute brisk walk', seconds: 60 }
+        ];
+    } else if (age < 30) {
+        return [
+            { id: 'task_1', name: 'Push up', target: '45 seconds', seconds: 45 },
+            { id: 'task_2', name: 'Squats', target: '1 minute', seconds: 60 },
+            { id: 'task_3', name: 'Plank', target: '45 seconds', seconds: 45 },
+            { id: 'task_4', name: 'Running', target: '2 minutes', seconds: 120 }
+        ];
+    } else {
+        return [
+            { id: 'task_1', name: 'Push up', target: '30 seconds', seconds: 30 },
+            { id: 'task_2', name: 'Squats', target: '45 seconds', seconds: 45 },
+            { id: 'task_3', name: 'Plank', target: '30 seconds', seconds: 30 },
+            { id: 'task_4', name: 'Running', target: '1 minute', seconds: 60 }
+        ];
+    }
+}
+
+function renderDailyRoutine() {
+    const isRegistered = localStorage.getItem('userRegistered') === 'true';
+    const lockedCard = document.getElementById('routine-locked');
+    const unlockedCard = document.getElementById('routine-unlocked');
+    const blocksGrid = document.getElementById('daily-blocks-grid');
+    const counter = document.getElementById('daily-progress-counter');
+    const subtitle = document.getElementById('routine-user-subtitle');
+
+    if (!lockedCard || !unlockedCard) return;
+
+    if (!isRegistered) {
+        lockedCard.style.display = 'block';
+        unlockedCard.style.display = 'none';
+        return;
+    }
+
+    lockedCard.style.display = 'none';
+    unlockedCard.style.display = 'block';
+
+    const uName = localStorage.getItem('userName') || 'Athlete';
+    const uAge = localStorage.getItem('userAge') || '25';
+    const uWeight = localStorage.getItem('userWeight') || '70';
+    if (subtitle) {
+        subtitle.textContent = `Plan for ${uName} (${uAge} yrs, ${uWeight} kg) · Click any block to start`;
+    }
+
+    const routine = getPersonalizedRoutine();
+    let completedTasks = JSON.parse(localStorage.getItem(TODAY_DATE_KEY) || '[]');
+
+    blocksGrid.innerHTML = '';
+    let doneCount = 0;
+
+    routine.forEach(task => {
+        const isDone = completedTasks.includes(task.id);
+        if (isDone) doneCount++;
+
+        const card = document.createElement('div');
+        card.className = `routine-block ${isDone ? 'completed' : ''}`;
+        card.innerHTML = `
+            <div>
+                <div class="routine-block-top">
+                    <span class="routine-block-name">${task.name}</span>
+                    <span class="routine-badge ${isDone ? 'done' : 'pending'}">${isDone ? 'Done ✅' : 'Start ▶'}</span>
+                </div>
+                <div class="routine-block-goal">Target: <strong>${task.target}</strong></div>
+            </div>
+            <div style="font-size: 0.75rem; color: #71717a;">${isDone ? 'Completed today' : 'Click to begin stopwatch'}</div>
+        `;
+
+        card.addEventListener('click', () => {
+            if (selectExercise) selectExercise.value = task.name;
+            openWorkoutModal();
+        });
+
+        blocksGrid.appendChild(card);
+    });
+
+    if (counter) {
+        counter.textContent = `${doneCount} / ${routine.length} Completed`;
+        if (doneCount === routine.length && routine.length > 0) {
+            counter.textContent = '🎉 All Done Today!';
+            counter.style.background = '#10b981';
+        }
+    }
+}
+
+// ===================== Monthly Goals System =====================
+
+function generateMonthlyGoals() {
+    const age = parseInt(localStorage.getItem('userAge') || '25', 10);
+    const weight = parseInt(localStorage.getItem('userWeight') || '70', 10);
+
+    // AI-tailored goals based on body profile
+    if (age >= 50 || weight > 95) {
+        return [
+            { name: 'Squats', target: 300, unit: 'reps' },
+            { name: 'Plank', target: 120, unit: 'min' },
+            { name: 'Running', target: 200, unit: 'min' }
+        ];
+    } else if (age < 25) {
+        return [
+            { name: 'Push up', target: 1000, unit: 'reps' },
+            { name: 'Squats', target: 800, unit: 'reps' },
+            { name: 'Pull-ups', target: 300, unit: 'reps' },
+            { name: 'Running', target: 500, unit: 'min' },
+            { name: 'Plank', target: 200, unit: 'min' }
+        ];
+    } else if (age < 35) {
+        return [
+            { name: 'Push up', target: 750, unit: 'reps' },
+            { name: 'Squats', target: 600, unit: 'reps' },
+            { name: 'Pull-ups', target: 200, unit: 'reps' },
+            { name: 'Running', target: 400, unit: 'min' },
+            { name: 'Plank', target: 150, unit: 'min' }
+        ];
+    } else {
+        return [
+            { name: 'Push up', target: 500, unit: 'reps' },
+            { name: 'Squats', target: 400, unit: 'reps' },
+            { name: 'Running', target: 300, unit: 'min' },
+            { name: 'Plank', target: 120, unit: 'min' }
+        ];
+    }
+}
+
+function getMonthlyProgress(exerciseName) {
+    // Count matching exercise logs from current month
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let totalSeconds = 0;
+    let sessionCount = 0;
+
+    logs.forEach(log => {
+        if (log.name !== exerciseName) return;
+        const logDate = log.timestamp ? new Date(log.timestamp) : null;
+        if (!logDate) return;
+        if (logDate.getMonth() !== currentMonth || logDate.getFullYear() !== currentYear) return;
+        totalSeconds += (log.seconds || 0);
+        sessionCount++;
+    });
+
+    return { totalSeconds, sessionCount };
+}
+
+function renderMonthlyGoals() {
+    const section = document.getElementById('monthly-goals-section');
+    const goalsList = document.getElementById('goals-list');
+    const monthLabel = document.getElementById('goals-month-label');
+    if (!section || !goalsList) return;
+
+    const isRegistered = localStorage.getItem('userRegistered') === 'true';
+
+    if (!isRegistered) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+
+    const now = new Date();
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const uName = localStorage.getItem('userName') || 'Athlete';
+    const uAge = localStorage.getItem('userAge') || '25';
+    const uWeight = localStorage.getItem('userWeight') || '70';
+
+    if (monthLabel) {
+        monthLabel.textContent = `AI plan for ${uName} (${uAge} yrs, ${uWeight} kg) · ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+    }
+
+    const goals = generateMonthlyGoals();
+    goalsList.innerHTML = '';
+
+    goals.forEach(goal => {
+        const progress = getMonthlyProgress(goal.name);
+
+        let current = 0;
+        if (goal.unit === 'reps') {
+            // Estimate reps from time: ~1 rep per 2 seconds for most exercises
+            current = Math.round(progress.totalSeconds / 2);
+        } else if (goal.unit === 'min') {
+            current = Math.round(progress.totalSeconds / 60);
+        }
+
+        const pct = Math.min(100, goal.target > 0 ? Math.round((current / goal.target) * 100) : 0);
+        const isComplete = current >= goal.target;
+
+        const card = document.createElement('div');
+        card.className = 'goal-card';
+        card.innerHTML = `
+            <div class="goal-card-top">
+                <span class="goal-name">${isComplete ? '✅ ' : '🎯 '}${goal.target} ${goal.name} ${goal.unit === 'min' ? 'minutes' : ''} this month</span>
+                <span class="goal-count">${current} / ${goal.target} ${goal.unit === 'min' ? 'min' : ''} ${isComplete ? 'completed ✔' : 'completed'}</span>
+            </div>
+            <div class="goal-progress-bar-bg">
+                <div class="goal-progress-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${pct}%;"></div>
+            </div>
+        `;
+        goalsList.appendChild(card);
+    });
+}
