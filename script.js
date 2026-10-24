@@ -737,7 +737,20 @@ function renderMonthlyGoals() {
     if (!section || !goalsList) return;
 
     if (localStorage.getItem('userRegistered') !== 'true') {
-        section.style.display = 'none';
+        section.style.display = 'block';
+        goalsList.innerHTML = '';
+        const lockedMessage = document.createElement('div');
+        lockedMessage.className = 'goals-locked-msg';
+        const title = document.createElement('h2');
+        title.textContent = 'Log in to see your goals';
+        const description = document.createElement('p');
+        description.textContent = 'Your monthly targets and progress will appear here after you set up your profile.';
+        const loginLink = document.createElement('a');
+        loginLink.href = '#profile';
+        loginLink.className = 'btn btn-primary goals-login-link';
+        loginLink.textContent = 'Go to profile';
+        lockedMessage.append(title, description, loginLink);
+        goalsList.appendChild(lockedMessage);
         return;
     }
     section.style.display = 'block';
