@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Activity Heatmap & Tracker</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="ai.css">
 </head>
 
 <body>
@@ -14,20 +16,20 @@
     <header class="top-nav">
         <div class="nav-container">
             <nav class="nav-links">
-                <a href="profile.html" class="nav-link">
+                <a href="#profile" class="nav-link" data-view-link="profile">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                     <span>Profile</span>
                 </a>
-                <a href="index.html" class="nav-link active">
+                <a href="#workouts" class="nav-link active" data-view-link="workouts" aria-current="page">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12"></path>
                     </svg>
                     <span>Workouts</span>
                 </a>
-                <a href="profile.html#goals" class="nav-link">
+                <a href="#goals" class="nav-link" data-view-link="goals">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
                         <circle cx="12" cy="12" r="6"></circle>
@@ -35,139 +37,308 @@
                     </svg>
                     <span>Goals</span>
                 </a>
+                <a href="#ai" class="nav-link ai-chat-nav-link" data-view-link="ai">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3H13a8.5 8.5 0 0 1 8 8v.5Z">
+                        </path>
+                    </svg>
+                    <span>AI Chat</span>
+                </a>
             </nav>
         </div>
     </header>
-    <div class="main-wrapper">
-        <!-- Locked / Before Login State -->
-        <div id="routine-locked"
-            style="display: none; text-align: center; border: 2px dashed #000; border-radius: 12px; padding: 3rem 1.5rem; background: #fafafa; margin-bottom: 2rem;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🔒</div>
-            <h2 style="font-size: 1.3rem; font-weight: 900; text-transform: uppercase;">Login to get daily routine</h2>
-            <p style="font-size: 0.9rem; color: #71717a; margin-top: 0.4rem; margin-bottom: 1.5rem;">
-                Log in with your body profile (age, height, weight) to receive your personalized daily AI workout
-                routine.
-            </p>
-            <a href="profile.html" class="btn btn-primary"
-                style="display: inline-block; width: auto; padding: 0.65rem 1.5rem; text-decoration: none;">Go to
-                Profile & Login</a>
-        </div>
-
-        <!-- Logged In: Personalized AI Daily Routine -->
-        <div id="routine-unlocked" style="display: none; margin-bottom: 2rem;">
-            <div
-                style="border-bottom: 2px solid #000; padding-bottom: 0.8rem; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.5rem;">
-                <div>
-                    <h2
-                        style="font-size: 1.4rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em;">
-                        Today's Work</h2>
-                    <p id="routine-user-subtitle" style="font-size: 0.85rem; color: #71717a; margin-top: 2px;">
-                        Customized plan for your body & age</p>
-                </div>
-                <div id="daily-progress-counter"
-                    style="font-size: 0.85rem; font-weight: 800; background: #000; color: #fff; padding: 4px 10px; border-radius: 20px;">
-                    0 / 4 Completed
-                </div>
+    <main id="workouts-view" class="app-view" data-app-view="workouts">
+        <div class="main-wrapper">
+            <!-- Locked / Before Login State -->
+            <div id="routine-locked"
+                style="display: none; text-align: center; border: 2px dashed #000; border-radius: 12px; padding: 3rem 1.5rem; background: #fafafa; margin-bottom: 2rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🔒</div>
+                <h2 style="font-size: 1.3rem; font-weight: 900; text-transform: uppercase;">Login to get daily routine
+                </h2>
+                <p style="font-size: 0.9rem; color: #71717a; margin-top: 0.4rem; margin-bottom: 1.5rem;">
+                    Log in with your body profile (age, height, weight) to receive your personalized daily AI workout
+                    routine.
+                </p>
+                <a href="#profile" data-view-link="profile" class="btn btn-primary"
+                    style="display: inline-block; width: auto; padding: 0.65rem 1.5rem; text-decoration: none;">Go to
+                    Profile & Login</a>
             </div>
 
-            <!-- Clickable Daily Exercise Blocks -->
-            <div id="daily-blocks-grid" class="daily-blocks-grid">
-                <!-- Rendered dynamically by script.js -->
-            </div>
-        </div>
-
-        <!-- Monthly AI Goals Section -->
-        <div id="monthly-goals-section" class="monthly-goals-section" style="display:none;">
-            <div class="monthly-goals-header">
-                <div>
-                    <h2 class="monthly-goals-title">Monthly Goals</h2>
-                    <p class="monthly-goals-subtitle" id="goals-month-label">AI-tailored targets for this month</p>
-                </div>
-            </div>
-            <div id="goals-list">
-                <!-- Rendered dynamically by script.js -->
-            </div>
-        </div>
-
-        <div class="logged-list" id="logged-list"></div>
-
-        <div class="action-box" id="add-box" title="Select an exercise and start tracking">
-            <span class="plus-symbol">+</span>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="workout-modal">
-        <div class="modal-card">
-            <div class="modal-top">
-                <h3>Track Workout</h3>
-                <button type="button" class="modal-close" id="close-modal">&times;</button>
-            </div>
-
-            <div class="form-group">
-                <label for="select-exercise">Select an Exercise</label>
-                <select id="select-exercise">
-                    <option value="Push up">Push up</option>
-                    <option value="Squats">Squats</option>
-                    <option value="Plank">Plank</option>
-                    <option value="Pull-ups">Pull-ups</option>
-                    <option value="Deadlift">Deadlift</option>
-                    <option value="Running">Running</option>
-                    <option value="CUSTOM">Custom Exercise...</option>
-                </select>
-            </div>
-
-            <div class="form-group" id="custom-name-row" style="display: none;">
-                <label for="custom-exercise-name">Exercise Name</label>
-                <input type="text" id="custom-exercise-name" placeholder="e.g. Bench Press">
-            </div>
-
-            <div class="stopwatch-section">
-                <div class="stopwatch-display" id="sw-display">00:00:00</div>
-                <div class="stopwatch-buttons">
-                    <button type="button" class="btn" id="btn-start">Start</button>
-                    <button type="button" class="btn" id="btn-pause" disabled>Pause</button>
-                    <button type="button" class="btn" id="btn-reset" disabled>Reset</button>
-                </div>
-            </div>
-
-            <button type="button" class="btn btn-primary" id="btn-log-workout" disabled>Log Exercise (Cant post under
-                30s)</button>
-        </div>
-    </div>
-    <div id="ai-chatbox-overlay"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: flex-end;">
-        <div
-            style="width: 380px; max-width: 90%; height: 100%; background: #0d0d0d; color: #ffffff; border-left: 1px solid #333; display: flex; flex-direction: column; font-family: sans-serif; box-shadow: -4px 0 15px rgba(0,0,0,0.5);">
-            <div
-                style="padding: 16px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; background: #141414;">
-                <span style="font-weight: bold; font-size: 16px;">AI Assistant</span>
-                <button id="close-ai-chat"
-                    style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">&times;</button>
-            </div>
-            <div id="ai-chat-messages"
-                style="flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+            <!-- Logged In: Personalized AI Daily Routine -->
+            <div id="routine-unlocked" style="display: none; margin-bottom: 2rem;">
                 <div
-                    style="align-self: flex-start; background: #222; padding: 10px 14px; border-radius: 8px; max-width: 85%;">
-                    Hello! I am your AI assistant for FitPulse. How can I help you today?
+                    style="border-bottom: 2px solid #000; padding-bottom: 0.8rem; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <h2
+                            style="font-size: 1.4rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em;">
+                            Today's Work</h2>
+                        <p id="routine-user-subtitle" style="font-size: 0.85rem; color: #71717a; margin-top: 2px;">
+                            Customized plan for your body & age</p>
+                        <p id="plans-status" class="plans-status" aria-live="polite"></p>
+                    </div>
+                    <div id="daily-progress-counter"
+                        style="font-size: 0.85rem; font-weight: 800; background: #000; color: #fff; padding: 4px 10px; border-radius: 20px;">
+                        0 / 4 Completed
+                    </div>
+                </div>
+
+                <!-- Clickable Daily Exercise Blocks -->
+                <div id="daily-blocks-grid" class="daily-blocks-grid">
+                    <!-- Rendered dynamically by script.js -->
                 </div>
             </div>
-            <div style="padding: 12px; border-top: 1px solid #222; display: flex; gap: 8px; background: #141414;">
-                <input type="text" id="ai-chat-input" placeholder="Ask a question..."
-                    style="flex: 1; padding: 10px; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; outline: none; font-size: 14px;">
-                <button id="ai-chat-send"
-                    style="background: #ffffff; color: #000000; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer;">Send</button>
+
+            <!-- Monthly AI Goals Section -->
+            <div id="monthly-goals-section" class="monthly-goals-section" data-goals-section style="display:none;">
+                <div class="monthly-goals-header">
+                    <div>
+                        <h2 class="monthly-goals-title">Monthly Goals</h2>
+                        <p class="monthly-goals-subtitle" id="goals-month-label">Monthly activity targets based on your
+                            profile</p>
+                    </div>
+                </div>
+                <div id="goals-list">
+                    <!-- Rendered dynamically by script.js -->
+                </div>
+            </div>
+
+            <div class="logged-list" id="logged-list"></div>
+
+            <div class="action-box" id="add-box" title="Select an exercise and start tracking">
+                <span class="plus-symbol">+</span>
             </div>
         </div>
-    </div>
 
+        <div class="modal-overlay" id="workout-modal">
+            <div class="modal-card">
+                <div class="modal-top">
+                    <h3>Track Workout</h3>
+                    <button type="button" class="modal-close" id="close-modal">&times;</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="select-exercise">Select an Exercise</label>
+                    <select id="select-exercise">
+                        <option value="Push up">Push up</option>
+                        <option value="Squats">Squats</option>
+                        <option value="Plank">Plank</option>
+                        <option value="Pull-ups">Pull-ups</option>
+                        <option value="Deadlift">Deadlift</option>
+                        <option value="Running">Running</option>
+                        <option value="CUSTOM">Custom Exercise...</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="custom-name-row" style="display: none;">
+                    <label for="custom-exercise-name">Exercise Name</label>
+                    <input type="text" id="custom-exercise-name" placeholder="e.g. Bench Press">
+                </div>
+
+                <div class="form-group" id="workout-amount-row">
+                    <label for="workout-amount" id="workout-amount-label">Reps completed</label>
+                    <input type="number" id="workout-amount" min="0.1" step="any" inputmode="decimal"
+                        placeholder="Enter completed reps">
+                    <small id="workout-amount-help" class="workout-amount-help">Enter the amount you completed.</small>
+                </div>
+
+                <div class="stopwatch-section">
+                    <div class="stopwatch-display" id="sw-display">00:00:00</div>
+                    <div class="stopwatch-buttons">
+                        <button type="button" class="btn" id="btn-start">Start</button>
+                        <button type="button" class="btn" id="btn-pause" disabled>Pause</button>
+                        <button type="button" class="btn" id="btn-reset" disabled>Reset</button>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary" id="btn-log-workout" disabled>Log Exercise (Cant post
+                    under
+                    30s)</button>
+            </div>
+        </div>
+    </main>
+
+    <main id="profile-view" class="app-view profile-app-view" data-app-view="profile" hidden>
+        <div class="banner-wrapper">
+            <div class="banner-content">
+                <div class="banner-speed-lines"></div>
+                <img src="689ed4d0124a2ec35bc92d7a_15.png" alt="Athlete Running" class="banner-runner-img"
+                    onerror="this.src='running.png'">
+            </div>
+        </div>
+
+        <section class="profile-layout">
+            <div id="first-time-login-card"
+                style="display: none; grid-column: 1 / -1; max-width: 480px; margin: 2rem auto; border: 2px solid #000; border-radius: 12px; padding: 2rem; background: #fff;">
+                <h2
+                    style="text-align: center; font-size: 1.4rem; font-weight: 900; margin-bottom: 0.5rem; text-transform: uppercase;">
+                    Welcome to FitPulse</h2>
+                <p style="text-align: center; font-size: 0.85rem; color: #71717a; margin-bottom: 1.5rem;">Enter your
+                    fitness profile to get started</p>
+                <form id="onboarding-form">
+                    <div class="form-group">
+                        <label for="setup-name">Name</label>
+                        <input type="text" id="setup-name" placeholder="e.g. Jane Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="setup-email">Email Address</label>
+                        <input type="email" id="setup-email" placeholder="name@example.com" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
+                        <div class="form-group">
+                            <label for="setup-age">Age</label>
+                            <input type="number" id="setup-age" placeholder="25" min="10" max="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="setup-height">Height (cm)</label>
+                            <input type="number" id="setup-height" placeholder="175" min="50" max="250" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="setup-weight">Weight (kg)</label>
+                            <input type="number" id="setup-weight" placeholder="70" min="20" max="300" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Save Profile &
+                        Continue</button>
+                </form>
+            </div>
+
+            <aside class="profile-sidebar">
+                <div class="avatar-wrapper">
+                    <div class="avatar-halftone">
+                        <img src="default-profile.png" alt="Profile Avatar" id="user-avatar-img"
+                            onerror="this.src='running.png'">
+                    </div>
+                    <span class="avatar-badge">B&W</span>
+                </div>
+                <div class="profile-meta">
+                    <h1 class="user-fullname" id="display-fullname">Jane Doe</h1>
+                    <div class="user-username" id="display-username">jdoemobbin</div>
+                    <p class="user-bio" id="display-bio">
+                        I'm a fitness enthusiast with a passion for long-distance running. My current goal is a sub-3
+                        hour
+                        marathon. Tracking my workouts to build consistent habits.
+                    </p>
+                    <button type="button" class="btn-edit-profile" id="open-edit-modal">Edit profile</button>
+                </div>
+            </aside>
+
+            <section class="profile-content">
+                <div class="heatmap-header">
+                    <div>
+                        <h1 class="heatmap-title">FitPulse</h1>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">When you work out
+                            across
+                            the week</p>
+                    </div>
+                    <div class="intensity-legend">
+                        <span class="legend-label">Intensity:</span>
+                        <span class="legend-tag tag-low">Low</span>
+                        <span class="legend-tag tag-mid">Mid</span>
+                        <span class="legend-tag tag-high">High</span>
+                    </div>
+                </div>
+                <div class="heatmap-card">
+                    <div class="heatmap-grid" id="heatmap-grid"></div>
+                    <div class="heatmap-footer">
+                        <div class="month-label" id="month-label">OCTOBER 2026</div>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <div class="modal-overlay" id="edit-profile-modal">
+            <div class="modal-card">
+                <div class="modal-top">
+                    <h3>Edit Profile</h3>
+                    <button type="button" class="modal-close" id="close-edit-modal">&times;</button>
+                </div>
+                <form id="edit-profile-form">
+                    <div class="form-group">
+                        <label for="input-fullname">Full Name</label>
+                        <input type="text" id="input-fullname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="input-username">Username</label>
+                        <input type="text" id="input-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="input-bio">Bio</label>
+                        <textarea id="input-bio" rows="3"
+                            style="width: 100%; padding: 8px; border: 2px solid #000; border-radius: 8px; font-family: inherit; font-size: 0.9rem;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Profile</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="auth-modal">
+            <div class="modal-card">
+                <div class="modal-top">
+                    <h3 id="auth-modal-title">Sign In to FitPulse</h3>
+                    <button type="button" class="modal-close" id="close-auth-modal">&times;</button>
+                </div>
+                <form id="auth-form">
+                    <div class="form-group" id="auth-name-group" style="display: none;">
+                        <label for="auth-fullname">Full Name</label>
+                        <input type="text" id="auth-fullname" placeholder="Jane Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="auth-email">Email or Username</label>
+                        <input type="text" id="auth-email" placeholder="jdoemobbin or name@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="auth-password">Password</label>
+                        <input type="password" id="auth-password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btn-auth-submit">Sign In</button>
+                    <div style="text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--text-muted);">
+                        <span id="auth-toggle-text">Don't have an account?</span>
+                        <a href="#profile" id="auth-toggle-link"
+                            style="color: #000; font-weight: 700; margin-left: 4px;">Sign Up / Register</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <main id="ai-view" class="app-view ai-view" data-app-view="ai" hidden>
+        <section class="ai-main">
+            <div class="ai-chat-workspace" aria-label="FitPulse AI chat">
+                <div id="ai-chat-welcome" class="ai-chat-welcome">
+                    <div class="ai-orb" aria-hidden="true"></div>
+                    <h1>Good <span id="ai-greeting-time">day</span>, <span id="ai-greeting-name">Athlete</span></h1>
+                    <p>How can I <span>help you today?</span></p>
+                </div>
+                <div id="ai-chat-messages" class="ai-chat-messages" aria-live="polite" aria-relevant="additions"></div>
+                <div class="ai-composer-area">
+                    <div class="ai-composer">
+                        <label class="ai-composer-label" for="ai-chat-input">FitPulse AI Coach <span>·</span> Fitness
+                            guidance for your goals</label>
+                        <form id="ai-chat-form" class="ai-chat-form">
+                            <textarea id="ai-chat-input" rows="1" maxlength="2000" placeholder="Ask me anything..."
+                                aria-label="Message the AI coach"></textarea>
+                            <div class="ai-composer-toolbar">
+                                <span class="ai-model-chip" aria-label="AI model">✦ <span>FitPulse Coach</span></span>
+                                <button id="ai-chat-send" class="ai-send-button" type="submit"
+                                    aria-label="Send message">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M5 12h14M12 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+        </section>
+    </main>
     <div id="tooltip" class="tooltip"></div>
 
-    <div id="ai-assistant-btn"
-        style="position: fixed; bottom: 20px; right: 20px; background-color: #000000; color: #ffffff; border: 2px solid #ffffff; padding: 12px 20px; border-radius: 30px; font-family: sans-serif; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-        Ask Ai Assistant</div>
-
     <script src="config.js"></script>
+    <script src="chat.js"></script>
     <script src="script.js"></script>
+    <script src="profile.js"></script>
+    <script src="app.js"></script>
 </body>
 
 </html>

@@ -23,6 +23,10 @@ const closeModal = document.getElementById('close-modal');
 const selectExercise = document.getElementById('select-exercise');
 const customNameRow = document.getElementById('custom-name-row');
 const customExerciseName = document.getElementById('custom-exercise-name');
+const workoutAmount = document.getElementById('workout-amount');
+const workoutAmountRow = document.getElementById('workout-amount-row');
+const workoutAmountLabel = document.getElementById('workout-amount-label');
+const workoutAmountHelp = document.getElementById('workout-amount-help');
 
 const swDisplay = document.getElementById('sw-display');
 const btnStart = document.getElementById('btn-start');
@@ -43,6 +47,7 @@ function init() {
     renderDailyRoutine();
     renderMonthlyGoals();
     setupEvents();
+    ensureWorkoutPlans();
 }
 
 function loadLogs() {
@@ -56,6 +61,7 @@ function loadLogs() {
 
 function saveLogs() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+    window.dispatchEvent(new Event('fitpulse:logs-updated'));
 }
 
 function getHourRangeLabel(h) {
@@ -68,6 +74,7 @@ function getHourRangeLabel(h) {
 }
 
 function buildHeatmap() {
+    if (!grid) return;
     grid.innerHTML = '';
 
     const emptyCorner = document.createElement('div');
@@ -219,7 +226,9 @@ function setupEvents() {
         } else {
             customNameRow.style.display = 'none';
         }
+        updateWorkoutAmountField();
     });
+    updateWorkoutAmountField();
 
     btnStart.addEventListener('click', startStopwatch);
     btnPause.addEventListener('click', pauseStopwatch);
@@ -227,7 +236,7 @@ function setupEvents() {
 
     btnLogWorkout.addEventListener('click', logWorkout);
 
-    grid.addEventListener('mouseover', (e) => {
+    if (grid) grid.addEventListener('mouseover', (e) => {
         const cell = e.target.closest('.cell');
         if (!cell) return;
         const sec = parseInt(cell.dataset.seconds || 0, 10);
@@ -238,12 +247,12 @@ function setupEvents() {
         tooltip.style.display = 'block';
     });
 
-    grid.addEventListener('mousemove', (e) => {
+    if (grid) grid.addEventListener('mousemove', (e) => {
         tooltip.style.left = (e.clientX + 14) + 'px';
         tooltip.style.top = (e.clientY + 14) + 'px';
     });
 
-    grid.addEventListener('mouseout', (e) => {
+    if (grid) grid.addEventListener('mouseout', (e) => {
         if (e.target.closest('.cell')) {
             tooltip.style.display = 'none';
         }
@@ -252,6 +261,7 @@ function setupEvents() {
 
 function openWorkoutModal() {
     resetStopwatch();
+    if (workoutAmount) workoutAmount.value = '';
     modal.classList.add('active');
 }
 
@@ -281,6 +291,29 @@ function checkMinTimeRequirement() {
     } else {
         btnLogWorkout.disabled = true;
         btnLogWorkout.textContent = 'Log Exercise (Cant post under 30s)';
+    }
+}
+
+function updateWorkoutAmountField() {
+    if (!workoutAmountRow || !workoutAmount || !workoutAmountLabel || !workoutAmountHelp) return;
+    const exercise = selectExercise?.value;
+    const amountType = exercise === 'Running'
+        ? 'distanceKm'
+        : ['Push up', 'Squats', 'Pull-ups', 'Deadlift'].includes(exercise)
+            ? 'reps'
+            : null;
+
+    workoutAmountRow.hidden = !amountType;
+    workoutAmount.required = Boolean(amountType);
+    workoutAmount.value = '';
+    if (amountType === 'distanceKm') {
+        workoutAmountLabel.textContent = 'Distance completed (km)';
+        workoutAmountHelp.textContent = 'Enter the distance you ran, for example 2.5 km.';
+        workoutAmount.placeholder = 'e.g. 2.5';
+    } else if (amountType === 'reps') {
+        workoutAmountLabel.textContent = 'Reps completed';
+        workoutAmountHelp.textContent = 'Enter the total number of repetitions in this session.';
+        workoutAmount.placeholder = 'e.g. 20';
     }
 }
 
@@ -328,6 +361,18 @@ function logWorkout() {
         name = customExerciseName.value.trim() || 'Workout';
     }
 
+    const amount = Number.parseFloat(workoutAmount?.value || '');
+    const amountType = name === 'Running'
+        ? 'distanceKm'
+        : ['Push up', 'Squats', 'Pull-ups', 'Deadlift'].includes(name)
+            ? 'reps'
+            : null;
+    if (amountType && (!Number.isFinite(amount) || amount <= 0)) {
+        alert(`Enter the ${amountType === 'distanceKm' ? 'distance in km' : 'number of reps'} you completed.`);
+        workoutAmount?.focus();
+        return;
+    }
+
     const durationStr = formatDisplayDuration(swSeconds);
 
     const now = new Date();
@@ -344,7 +389,9 @@ function logWorkout() {
         date: dateStr,
         dayIdx: dayIdx,
         hour: hour,
-        timestamp: now.getTime()
+        timestamp: now.getTime(),
+        ...(amountType === 'reps' ? { reps: amount } : {}),
+        ...(amountType === 'distanceKm' ? { distanceKm: amount } : {})
     };
 
     logs.unshift(newLog);
@@ -353,22 +400,26 @@ function logWorkout() {
     updateHeatmapActivity();
 
     try {
-        const todayKey = 'fitpulse_routine_' + new Date().toISOString().slice(0, 10);
+        const todayKey = TODAY_DATE_KEY;
         let completedTasks = JSON.parse(localStorage.getItem(todayKey) || '[]');
         const currentRoutine = getPersonalizedRoutine();
-        const matchedTask = currentRoutine.find(t => t.name === name);
-        if (matchedTask && !completedTasks.includes(matchedTask.id)) {
+        const matchedTask = currentRoutine.find(t => t.name === name && !completedTasks.includes(t.id));
+        if (matchedTask) {
             completedTasks.push(matchedTask.id);
             localStorage.setItem(todayKey, JSON.stringify(completedTasks));
         }
         renderDailyRoutine();
-    } catch (_) {}
+    } catch (error) {
+        console.warn('Could not update today’s workout completion.', error);
+    }
 
     renderMonthlyGoals();
     closeWorkoutModal();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    if (window.fitPulseChatInitialized) return;
+
     async function getApiKey() {
         if (window.CONFIG?.GEMINI_API_KEY && window.CONFIG.GEMINI_API_KEY !== "your_gemini_api_key_here") {
             return window.CONFIG.GEMINI_API_KEY;
@@ -600,36 +651,191 @@ Tailor your workout, health, and fitness advice to their body profile. Keep resp
     }
 });
 
-init();
+// Personalized AI workout and monthly plans
+const getLocalDateKey = date => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+const TODAY_DATE_KEY = `fitpulse_routine_${getLocalDateKey(new Date())}`;
+const DAILY_PLAN_KEY = `fitpulse_daily_plan_${getLocalDateKey(new Date())}`;
+const MONTHLY_PLAN_KEY = `fitpulse_monthly_plan_${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+const ALLOWED_EXERCISES = ['Push up', 'Squats', 'Plank', 'Pull-ups', 'Deadlift', 'Running'];
+let dailyPlan = null;
+let monthlyPlan = null;
+let plansRequestInProgress = false;
 
-// Personalized Daily Routine System
-const TODAY_DATE_KEY = 'fitpulse_routine_' + new Date().toISOString().slice(0, 10);
+function getFallbackDailyPlan() {
+    return [
+        { name: 'Push up', target: '3 sets of 10 reps', reason: 'Build upper-body strength.' },
+        { name: 'Squats', target: '3 sets of 12 reps', reason: 'Train your legs with controlled repetitions.' },
+        { name: 'Plank', target: '3 holds of 30 seconds', reason: 'Build core stability while keeping good form.' },
+        { name: 'Running', target: '2 km at a comfortable pace', reason: 'Add an easy cardio session.' }
+    ];
+}
+
+function getFallbackMonthlyPlan() {
+    return [
+        { name: 'Push up', target: 1000, unit: 'reps' },
+        { name: 'Squats', target: 1000, unit: 'reps' },
+        { name: 'Running', target: 100, unit: 'km' },
+        { name: 'Plank', target: 600, unit: 'minutes' }
+    ];
+}
+
+function normalizeGeneratedPlans(value) {
+    if (!value || !Array.isArray(value.dailyWorkouts) || value.dailyWorkouts.length !== 4 ||
+        !Array.isArray(value.monthlyGoals) || value.monthlyGoals.length < 3) {
+        throw new Error('AI returned an incomplete workout plan.');
+    }
+
+    const dailyWorkouts = value.dailyWorkouts.map(item => {
+        if (!item || !ALLOWED_EXERCISES.includes(item.name) || typeof item.target !== 'string') {
+            throw new Error('AI returned an invalid daily workout.');
+        }
+        return {
+            name: item.name,
+            target: item.target.slice(0, 100),
+            reason: typeof item.reason === 'string' ? item.reason.slice(0, 180) : ''
+        };
+    });
+    const monthlyGoals = value.monthlyGoals.map(item => {
+        const unit = item?.unit;
+        const target = Number(item?.target);
+        if (!item || !ALLOWED_EXERCISES.includes(item.name) ||
+            !['reps', 'km', 'minutes'].includes(unit) || !Number.isFinite(target) || target <= 0) {
+            throw new Error('AI returned an invalid monthly goal.');
+        }
+        if ((unit === 'km' && item.name !== 'Running') ||
+            (unit === 'reps' && !['Push up', 'Squats', 'Pull-ups', 'Deadlift'].includes(item.name)) ||
+            (unit === 'minutes' && item.name !== 'Plank')) {
+            throw new Error('AI returned a goal with the wrong measurement.');
+        }
+        return { name: item.name, target: Math.round(target), unit };
+    });
+
+    return { dailyWorkouts, monthlyGoals };
+}
+
+function getStoredPlan(key) {
+    try {
+        const value = localStorage.getItem(key);
+        return value ? JSON.parse(value) : null;
+    } catch (error) {
+        console.warn(`Could not read saved plan (${key}).`, error);
+        return null;
+    }
+}
+
+function getPlanRequestData() {
+    const profile = {
+        name: localStorage.getItem('userName') || 'Athlete',
+        age: localStorage.getItem('userAge') || '',
+        height: localStorage.getItem('userHeight') || '',
+        weight: localStorage.getItem('userWeight') || ''
+    };
+    const recentWorkouts = logs.slice(0, 40).map(log => ({
+        name: String(log.name || '').slice(0, 40),
+        date: log.timestamp ? new Date(Number(log.timestamp)).toISOString().slice(0, 10) : '',
+        durationMinutes: Math.round((Number(log.seconds) || 0) / 60),
+        reps: Number(log.reps) || 0,
+        distanceKm: Number(log.distanceKm) || 0
+    }));
+    return { profile, recentWorkouts };
+}
+
+async function requestPlansFromAI() {
+    const requestData = getPlanRequestData();
+    const endpoint = new URL('api/chat', document.baseURI);
+    let serverError;
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'generate_plans', ...requestData })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok) return normalizeGeneratedPlans(data.plans);
+        serverError = data.error || `Plan generation failed (${response.status}).`;
+    } catch (error) {
+        serverError = error.message || 'Could not connect to the plan service.';
+    }
+
+    const apiKey = window.CONFIG?.GEMINI_API_KEY;
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+        throw new Error(serverError || 'AI plans are not configured.');
+    }
+
+    const prompt = `Create a safe, practical fitness plan for today and monthly goals based on this profile and recent logged workouts. Return ONLY valid JSON with this schema: {"dailyWorkouts":[{"name":"Push up|Squats|Plank|Pull-ups|Deadlift|Running","target":"short measurable target","reason":"short reason"}],"monthlyGoals":[{"name":"Push up|Squats|Plank|Pull-ups|Deadlift|Running","target":1000,"unit":"reps|km|minutes"}]}. Include exactly four daily workouts. Include at least three monthly goals, preferably push-ups and squats measured in reps, running measured in km, and plank measured in minutes. Set achievable targets based on the user's recent consistency and profile. Do not invent workout history. Profile and workout history: ${JSON.stringify(requestData)}`;
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            system_instruction: {
+                parts: [{ text: 'You are FitPulse’s fitness planner. Give beginner-safe, balanced workout plans. Return only the requested JSON, with no markdown.' }]
+            },
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
+        })
+    });
+    const data = await response.json();
+    const responseText = data.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('').trim();
+    if (!response.ok || !responseText) {
+        throw new Error(data.error?.message || serverError || 'AI could not create a plan.');
+    }
+    return normalizeGeneratedPlans(JSON.parse(responseText));
+}
+
+async function ensureWorkoutPlans() {
+    if (localStorage.getItem('userRegistered') !== 'true') return;
+    dailyPlan = getStoredPlan(DAILY_PLAN_KEY);
+    monthlyPlan = getStoredPlan(MONTHLY_PLAN_KEY);
+    renderDailyRoutine();
+    renderMonthlyGoals();
+    if ((dailyPlan && Array.isArray(dailyPlan.dailyWorkouts)) &&
+        (monthlyPlan && Array.isArray(monthlyPlan.monthlyGoals))) return;
+    if (plansRequestInProgress) return;
+
+    plansRequestInProgress = true;
+    const planStatus = document.getElementById('plans-status');
+    if (planStatus) planStatus.textContent = 'Personalizing your plans from your workout history…';
+    try {
+        const generated = await requestPlansFromAI();
+        const today = new Date();
+        const dateKey = getLocalDateKey(today);
+        const monthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        if (!dailyPlan || !Array.isArray(dailyPlan.dailyWorkouts)) {
+            dailyPlan = { date: dateKey, dailyWorkouts: generated.dailyWorkouts };
+            localStorage.setItem(`fitpulse_daily_plan_${dateKey}`, JSON.stringify(dailyPlan));
+        }
+        if (!monthlyPlan || !Array.isArray(monthlyPlan.monthlyGoals)) {
+            monthlyPlan = { month: monthKey, monthlyGoals: generated.monthlyGoals };
+            localStorage.setItem(`fitpulse_monthly_plan_${monthKey}`, JSON.stringify(monthlyPlan));
+        }
+        if (planStatus) planStatus.textContent = 'AI plans are personalized to your profile and recent workouts.';
+    } catch (error) {
+        console.warn('Could not generate AI workout plans.', error);
+        dailyPlan = dailyPlan?.dailyWorkouts ? dailyPlan : { dailyWorkouts: getFallbackDailyPlan() };
+        monthlyPlan = monthlyPlan?.monthlyGoals ? monthlyPlan : { monthlyGoals: getFallbackMonthlyPlan() };
+        if (planStatus) planStatus.textContent = 'Showing starter plans; AI personalization will retry when available.';
+    } finally {
+        plansRequestInProgress = false;
+        renderDailyRoutine();
+        renderMonthlyGoals();
+    }
+}
 
 function getPersonalizedRoutine() {
-    const age = parseInt(localStorage.getItem('userAge') || '25', 10);
-    const weight = parseInt(localStorage.getItem('userWeight') || '70', 10);
-
-    if (age >= 50 || weight > 95) {
-        return [
-            { id: 'task_1', name: 'Plank', target: '30 seconds', seconds: 30 },
-            { id: 'task_2', name: 'Squats', target: '45 seconds', seconds: 45 },
-            { id: 'task_3', name: 'Running', target: '1 minute brisk walk', seconds: 60 }
-        ];
-    } else if (age < 30) {
-        return [
-            { id: 'task_1', name: 'Push up', target: '45 seconds', seconds: 45 },
-            { id: 'task_2', name: 'Squats', target: '1 minute', seconds: 60 },
-            { id: 'task_3', name: 'Plank', target: '45 seconds', seconds: 45 },
-            { id: 'task_4', name: 'Running', target: '2 minutes', seconds: 120 }
-        ];
-    } else {
-        return [
-            { id: 'task_1', name: 'Push up', target: '30 seconds', seconds: 30 },
-            { id: 'task_2', name: 'Squats', target: '45 seconds', seconds: 45 },
-            { id: 'task_3', name: 'Plank', target: '30 seconds', seconds: 30 },
-            { id: 'task_4', name: 'Running', target: '1 minute', seconds: 60 }
-        ];
+    const tasks = dailyPlan?.dailyWorkouts;
+    if (Array.isArray(tasks) && tasks.length === 4) {
+        return tasks.map((task, index) => ({
+            ...task,
+            id: `task_${index + 1}`
+        }));
     }
+    return getFallbackDailyPlan().map((task, index) => ({ ...task, id: `task_${index + 1}` }));
 }
 
 function renderDailyRoutine() {
@@ -640,8 +846,7 @@ function renderDailyRoutine() {
     const counter = document.getElementById('daily-progress-counter');
     const subtitle = document.getElementById('routine-user-subtitle');
 
-    if (!lockedCard || !unlockedCard) return;
-
+    if (!lockedCard || !unlockedCard || !blocksGrid) return;
     if (!isRegistered) {
         lockedCard.style.display = 'block';
         unlockedCard.style.display = 'none';
@@ -650,112 +855,80 @@ function renderDailyRoutine() {
 
     lockedCard.style.display = 'none';
     unlockedCard.style.display = 'block';
-
     const uName = localStorage.getItem('userName') || 'Athlete';
-    const uAge = localStorage.getItem('userAge') || '25';
-    const uWeight = localStorage.getItem('userWeight') || '70';
-    if (subtitle) {
-        subtitle.textContent = `Plan for ${uName} (${uAge} yrs, ${uWeight} kg) · Click any block to start`;
-    }
+    if (subtitle) subtitle.textContent = `AI plan for ${uName} · Four workouts selected from your recent activity`;
 
     const routine = getPersonalizedRoutine();
-    let completedTasks = JSON.parse(localStorage.getItem(TODAY_DATE_KEY) || '[]');
+    let completedTasks = [];
+    try {
+        completedTasks = JSON.parse(localStorage.getItem(TODAY_DATE_KEY) || '[]');
+        if (!Array.isArray(completedTasks)) completedTasks = [];
+    } catch (error) {
+        console.warn('Could not restore today’s workout completion.', error);
+    }
 
     blocksGrid.innerHTML = '';
     let doneCount = 0;
-
     routine.forEach(task => {
         const isDone = completedTasks.includes(task.id);
         if (isDone) doneCount++;
 
-        const card = document.createElement('div');
+        const card = document.createElement('button');
+        card.type = 'button';
         card.className = `routine-block ${isDone ? 'completed' : ''}`;
-        card.innerHTML = `
-            <div>
-                <div class="routine-block-top">
-                    <span class="routine-block-name">${task.name}</span>
-                    <span class="routine-badge ${isDone ? 'done' : 'pending'}">${isDone ? 'Done ✅' : 'Start ▶'}</span>
-                </div>
-                <div class="routine-block-goal">Target: <strong>${task.target}</strong></div>
-            </div>
-            <div style="font-size: 0.75rem; color: #71717a;">${isDone ? 'Completed today' : 'Click to begin stopwatch'}</div>
-        `;
 
+        const top = document.createElement('div');
+        top.className = 'routine-block-top';
+        const name = document.createElement('span');
+        name.className = 'routine-block-name';
+        name.textContent = task.name;
+        const badge = document.createElement('span');
+        badge.className = `routine-badge ${isDone ? 'done' : 'pending'}`;
+        badge.textContent = isDone ? 'Done' : 'Start';
+        top.append(name, badge);
+
+        const target = document.createElement('div');
+        target.className = 'routine-block-goal';
+        target.textContent = `Target: ${task.target}`;
+        const reason = document.createElement('div');
+        reason.className = 'routine-block-reason';
+        reason.textContent = isDone ? 'Completed today' : task.reason || 'Tap to start this workout.';
+        card.append(top, target, reason);
         card.addEventListener('click', () => {
-            if (selectExercise) selectExercise.value = task.name;
+            if (selectExercise) {
+                selectExercise.value = task.name;
+                selectExercise.dispatchEvent(new Event('change'));
+            }
             openWorkoutModal();
         });
-
         blocksGrid.appendChild(card);
     });
 
     if (counter) {
         counter.textContent = `${doneCount} / ${routine.length} Completed`;
-        if (doneCount === routine.length && routine.length > 0) {
-            counter.textContent = '🎉 All Done Today!';
-            counter.style.background = '#10b981';
-        }
+        counter.style.background = doneCount === routine.length ? '#10b981' : '#000';
+        if (doneCount === routine.length) counter.textContent = 'All Done Today!';
     }
 }
-
-// ===================== Monthly Goals System =====================
 
 function generateMonthlyGoals() {
-    const age = parseInt(localStorage.getItem('userAge') || '25', 10);
-    const weight = parseInt(localStorage.getItem('userWeight') || '70', 10);
-
-    // AI-tailored goals based on body profile
-    if (age >= 50 || weight > 95) {
-        return [
-            { name: 'Squats', target: 300, unit: 'reps' },
-            { name: 'Plank', target: 120, unit: 'min' },
-            { name: 'Running', target: 200, unit: 'min' }
-        ];
-    } else if (age < 25) {
-        return [
-            { name: 'Push up', target: 1000, unit: 'reps' },
-            { name: 'Squats', target: 800, unit: 'reps' },
-            { name: 'Pull-ups', target: 300, unit: 'reps' },
-            { name: 'Running', target: 500, unit: 'min' },
-            { name: 'Plank', target: 200, unit: 'min' }
-        ];
-    } else if (age < 35) {
-        return [
-            { name: 'Push up', target: 750, unit: 'reps' },
-            { name: 'Squats', target: 600, unit: 'reps' },
-            { name: 'Pull-ups', target: 200, unit: 'reps' },
-            { name: 'Running', target: 400, unit: 'min' },
-            { name: 'Plank', target: 150, unit: 'min' }
-        ];
-    } else {
-        return [
-            { name: 'Push up', target: 500, unit: 'reps' },
-            { name: 'Squats', target: 400, unit: 'reps' },
-            { name: 'Running', target: 300, unit: 'min' },
-            { name: 'Plank', target: 120, unit: 'min' }
-        ];
-    }
+    const goals = monthlyPlan?.monthlyGoals;
+    return Array.isArray(goals) && goals.length >= 3 ? goals : getFallbackMonthlyPlan();
 }
 
-function getMonthlyProgress(exerciseName) {
-    // Count matching exercise logs from current month
+function getMonthlyProgress(goal) {
     const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    let totalSeconds = 0;
-    let sessionCount = 0;
-
-    logs.forEach(log => {
-        if (log.name !== exerciseName) return;
-        const logDate = log.timestamp ? new Date(log.timestamp) : null;
-        if (!logDate) return;
-        if (logDate.getMonth() !== currentMonth || logDate.getFullYear() !== currentYear) return;
-        totalSeconds += (log.seconds || 0);
-        sessionCount++;
-    });
-
-    return { totalSeconds, sessionCount };
+    return logs.reduce((total, log) => {
+        if (log.name !== goal.name) return total;
+        const timestamp = Number(log.timestamp);
+        if (!Number.isFinite(timestamp)) return total;
+        const date = new Date(timestamp);
+        if (date.getMonth() !== now.getMonth() || date.getFullYear() !== now.getFullYear()) return total;
+        if (goal.unit === 'reps') return total + (Number(log.reps) || 0);
+        if (goal.unit === 'km') return total + (Number(log.distanceKm) || 0);
+        if (goal.unit === 'minutes') return total + (Number(log.seconds) || 0) / 60;
+        return total;
+    }, 0);
 }
 
 function renderMonthlyGoals() {
@@ -764,53 +937,51 @@ function renderMonthlyGoals() {
     const monthLabel = document.getElementById('goals-month-label');
     if (!section || !goalsList) return;
 
-    const isRegistered = localStorage.getItem('userRegistered') === 'true';
-
-    if (!isRegistered) {
+    if (localStorage.getItem('userRegistered') !== 'true') {
         section.style.display = 'none';
         return;
     }
-
     section.style.display = 'block';
 
     const now = new Date();
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const uName = localStorage.getItem('userName') || 'Athlete';
-    const uAge = localStorage.getItem('userAge') || '25';
-    const uWeight = localStorage.getItem('userWeight') || '70';
+    if (monthLabel) monthLabel.textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()} · AI goals based on your workouts`;
 
-    if (monthLabel) {
-        monthLabel.textContent = `AI plan for ${uName} (${uAge} yrs, ${uWeight} kg) · ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-    }
-
-    const goals = generateMonthlyGoals();
     goalsList.innerHTML = '';
-
-    goals.forEach(goal => {
-        const progress = getMonthlyProgress(goal.name);
-
-        let current = 0;
-        if (goal.unit === 'reps') {
-            // Estimate reps from time: ~1 rep per 2 seconds for most exercises
-            current = Math.round(progress.totalSeconds / 2);
-        } else if (goal.unit === 'min') {
-            current = Math.round(progress.totalSeconds / 60);
-        }
-
-        const pct = Math.min(100, goal.target > 0 ? Math.round((current / goal.target) * 100) : 0);
+    generateMonthlyGoals().forEach(goal => {
+        const current = getMonthlyProgress(goal);
+        const pct = Math.min(100, Math.round(current / goal.target * 100));
         const isComplete = current >= goal.target;
+        const unitLabel = goal.unit === 'km' ? 'km' : goal.unit;
+        const currentText = goal.unit === 'km' ? current.toFixed(1) : Math.floor(current).toLocaleString();
 
-        const card = document.createElement('div');
+        const card = document.createElement('article');
         card.className = 'goal-card';
-        card.innerHTML = `
-            <div class="goal-card-top">
-                <span class="goal-name">${isComplete ? '✅ ' : '🎯 '}${goal.target} ${goal.name} ${goal.unit === 'min' ? 'minutes' : ''} this month</span>
-                <span class="goal-count">${current} / ${goal.target} ${goal.unit === 'min' ? 'min' : ''} ${isComplete ? 'completed ✔' : 'completed'}</span>
-            </div>
-            <div class="goal-progress-bar-bg">
-                <div class="goal-progress-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${pct}%;"></div>
-            </div>
-        `;
+        const top = document.createElement('div');
+        top.className = 'goal-card-top';
+        const name = document.createElement('span');
+        name.className = 'goal-name';
+        name.textContent = `${isComplete ? '✓ ' : ''}${goal.target.toLocaleString()} ${unitLabel} ${goal.name}`;
+        const count = document.createElement('span');
+        count.className = 'goal-count';
+        count.textContent = `${currentText} / ${goal.target.toLocaleString()} ${unitLabel}`;
+        top.append(name, count);
+        const bar = document.createElement('div');
+        bar.className = 'goal-progress-bar-bg';
+        bar.setAttribute('role', 'progressbar');
+        bar.setAttribute('aria-label', `${goal.name} monthly goal`);
+        bar.setAttribute('aria-valuemin', '0');
+        bar.setAttribute('aria-valuemax', String(goal.target));
+        bar.setAttribute('aria-valuenow', String(Math.min(goal.target, current)));
+        const fill = document.createElement('div');
+        fill.className = `goal-progress-bar-fill ${isComplete ? 'complete' : ''}`;
+        fill.style.width = `${pct}%`;
+        bar.appendChild(fill);
+        card.append(top, bar);
         goalsList.appendChild(card);
     });
 }
+
+window.addEventListener('fitpulse:user-registered', ensureWorkoutPlans);
+
+init();

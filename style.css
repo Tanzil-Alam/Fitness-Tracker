@@ -60,6 +60,10 @@ body {
     margin: 0;
 }
 
+[data-app-view][hidden] {
+    display: none !important;
+}
+
 .main-wrapper {
     display: flex;
     flex-direction: column;
@@ -528,6 +532,19 @@ body {
     background: #000000;
 }
 
+.ai-chat-nav-link {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.ai-chat-nav-link:focus-visible {
+    outline: 2px solid #000;
+    outline-offset: -4px;
+}
+
 /* Daily Routine Blocks */
 .daily-blocks-grid {
     display: grid;
@@ -636,6 +653,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
     margin-bottom: 0.6rem;
 }
 
@@ -689,4 +708,32 @@ body {
 .goals-locked-msg p {
     font-size: 0.85rem;
     color: #71717a;
+}
+
+@media (max-width: 520px) {
+    .top-nav .nav-links {
+        gap: 0.75rem;
+    }
+
+    .top-nav .nav-link {
+        gap: 0.3rem;
+        font-size: 0.8rem;
+    }
+
+    .top-nav .nav-link svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .goal-card {
+        padding: 0.85rem;
+    }
+
+    .goal-name {
+        font-size: 0.9rem;
+    }
+
+    .goal-count {
+        font-size: 0.8rem;
+    }
 }

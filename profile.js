@@ -1,3 +1,4 @@
+(() => {
 // Profile and Heatmap Management for FitPulse
 const STORAGE_KEY_LOGS = 'minimal_fitness_logs_v3';
 const STORAGE_KEY_USER = 'fitpulse_user_profile';
@@ -66,6 +67,7 @@ if (onboardingForm) {
 
         // 3. Reveal profile page
         checkUserRegistration();
+        window.dispatchEvent(new Event('fitpulse:user-registered'));
     });
 }
 let currentUser = { ...DEFAULT_USER };
@@ -487,7 +489,7 @@ function setupProfileEvents() {
     });
 
     // Login / Logout / Register
-btnAuthToggle.addEventListener('click', () => {
+if (btnAuthToggle) btnAuthToggle.addEventListener('click', () => {
     if (currentUser.isLoggedIn) {
         // Logout
         currentUser.isLoggedIn = false;
@@ -520,6 +522,7 @@ authForm.addEventListener('submit', (e) => {
     saveUserData();
     renderUserProfile();
     authModal.classList.remove('active');
+    window.dispatchEvent(new Event('fitpulse:user-registered'));
 });
 
 // Tooltip for 24-hr heatmap
@@ -553,6 +556,8 @@ setupAiAssistant();
 
 // AI Assistant with Vercel API, local fallback, and chat persistence
 function setupAiAssistant() {
+    if (window.fitPulseChatInitialized) return;
+
     const aiBtn = document.getElementById("ai-assistant-btn");
     const aiOverlay = document.getElementById("ai-chatbox-overlay");
     const aiClose = document.getElementById("close-ai-chat");
@@ -699,3 +704,8 @@ function setupAiAssistant() {
 }
 
 document.addEventListener("DOMContentLoaded", initProfile);
+window.addEventListener('fitpulse:logs-updated', () => {
+    loadLogs();
+    update24HourHeatmapActivity();
+});
+})();
