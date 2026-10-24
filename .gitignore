@@ -1,16 +1,13 @@
-# Environment variables & secrets
 .env
 .env.*
 !.env.example
 config.js
 !config.example.js
 
-# OS files
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# IDE & Editor settings
 .vscode/
 .idea/
 *.sublime-project

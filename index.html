@@ -42,7 +42,7 @@
                             d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3H13a8.5 8.5 0 0 1 8 8v.5Z">
                         </path>
                     </svg>
-                    <span>AI Chat</span>
+                    <span>AI</span>
                 </a>
             </nav>
         </div>
@@ -164,13 +164,9 @@
         </div>
 
         <section class="profile-layout">
-            <div id="first-time-login-card"
-                style="display: none; grid-column: 1 / -1; max-width: 480px; margin: 2rem auto; border: 2px solid #000; border-radius: 12px; padding: 2rem; background: #fff;">
-                <h2
-                    style="text-align: center; font-size: 1.4rem; font-weight: 900; margin-bottom: 0.5rem; text-transform: uppercase;">
-                    Welcome to FitPulse</h2>
-                <p style="text-align: center; font-size: 0.85rem; color: #71717a; margin-bottom: 1.5rem;">Enter your
-                    fitness profile to get started</p>
+            <div id="first-time-login-card" class="profile-setup-card">
+                <h2>Welcome to FitPulse</h2>
+                <p>Enter your fitness profile to get started.</p>
                 <form id="onboarding-form">
                     <div class="form-group">
                         <label for="setup-name">Name</label>
@@ -180,7 +176,7 @@
                         <label for="setup-email">Email Address</label>
                         <input type="email" id="setup-email" placeholder="name@example.com" required>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
+                    <div class="profile-measurements">
                         <div class="form-group">
                             <label for="setup-age">Age</label>
                             <input type="number" id="setup-age" placeholder="25" min="10" max="100" required>
@@ -194,8 +190,7 @@
                             <input type="number" id="setup-weight" placeholder="70" min="20" max="300" required>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Save Profile &
-                        Continue</button>
+                    <button type="submit" class="btn btn-primary profile-save-button">Save Profile & Continue</button>
                 </form>
             </div>
 

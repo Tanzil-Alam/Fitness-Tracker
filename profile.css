@@ -38,6 +38,48 @@
     padding: 0 1.5rem 3rem;
 }
 
+.profile-setup-card {
+    grid-column: 1 / -1;
+    width: min(100%, 480px);
+    margin: 2rem auto;
+    padding: 2rem;
+    border: 2px solid #000;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.profile-setup-card h2,
+.profile-setup-card > p {
+    text-align: center;
+}
+
+.profile-setup-card h2 {
+    margin-bottom: .5rem;
+    font-size: 1.4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.profile-setup-card > p {
+    margin-bottom: 1.5rem;
+    color: var(--text-muted);
+    font-size: .9rem;
+}
+
+.profile-measurements {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .8rem;
+}
+
+.profile-measurements input {
+    min-width: 0;
+}
+
+.profile-save-button {
+    margin-top: 1rem;
+}
+
 .profile-sidebar {
     z-index: 1;
     margin-top: -65px;
@@ -130,5 +172,196 @@
 
     .profile-sidebar {
         margin-top: -50px;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-app-view {
+        min-width: 0;
+        padding-bottom: calc(70px + env(safe-area-inset-bottom));
+    }
+
+    .banner-wrapper {
+        height: 120px;
+    }
+
+    .banner-runner-img {
+        height: 108px;
+    }
+
+    .profile-layout {
+        width: 100%;
+        min-width: 0;
+        gap: 1.25rem;
+        padding: 0 1rem 1.5rem;
+    }
+
+    .profile-sidebar {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr);
+        align-items: center;
+        gap: 0 1rem;
+        margin-top: -34px;
+    }
+
+    .profile-sidebar[style*="display: block"] {
+        display: grid !important;
+    }
+
+    .avatar-wrapper {
+        grid-row: span 2;
+        width: 76px;
+        height: 76px;
+        margin: 0;
+    }
+
+    .avatar-badge {
+        right: 0;
+        bottom: 0;
+        padding: 2px 4px;
+        font-size: .55rem;
+    }
+
+    .profile-meta {
+        min-width: 0;
+    }
+
+    .user-fullname {
+        font-size: 1.2rem;
+        overflow-wrap: anywhere;
+    }
+
+    .user-username {
+        margin-bottom: 0;
+        font-size: .82rem;
+        overflow-wrap: anywhere;
+    }
+
+    .user-bio {
+        grid-column: 1 / -1;
+        margin: .85rem 0;
+    }
+
+    .btn-edit-profile {
+        grid-column: 1 / -1;
+        margin: 0;
+    }
+
+    .profile-content {
+        width: 100%;
+        min-width: 0;
+        gap: 1rem;
+        padding-top: .5rem;
+    }
+
+    .heatmap-header {
+        align-items: flex-start;
+        gap: .6rem;
+    }
+
+    .heatmap-title {
+        font-size: 1.25rem;
+    }
+
+    .intensity-legend {
+        flex-wrap: wrap;
+        gap: .25rem;
+        font-size: .72rem;
+    }
+
+    .legend-tag {
+        padding: .15rem .4rem;
+        font-size: .68rem;
+    }
+
+    .heatmap-card {
+        width: 100%;
+        min-width: 0;
+        padding: .55rem;
+        border-width: 1px;
+        overflow: hidden;
+    }
+
+    .heatmap-grid {
+        width: 100%;
+        min-width: 0;
+        grid-template-columns: 22px repeat(24, minmax(0, 1fr));
+        gap: 1px;
+    }
+
+    .cell {
+        min-width: 0;
+        height: clamp(12px, 3.5vw, 16px);
+        border-radius: 2px;
+    }
+
+    .heatmap-footer {
+        margin-top: .7rem;
+        padding-top: .65rem;
+    }
+
+    .month-label {
+        font-size: .85rem;
+    }
+
+    .hour-header-cell {
+        position: relative;
+        overflow: visible;
+        padding: 0;
+        font-size: 0;
+    }
+
+    .hour-header-cell:nth-child(2)::after,
+    .hour-header-cell:nth-child(8)::after,
+    .hour-header-cell:nth-child(14)::after,
+    .hour-header-cell:nth-child(20)::after {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        color: var(--text-muted);
+        font-size: 6px;
+        font-weight: 700;
+        white-space: nowrap;
+        transform: translateX(-50%);
+    }
+
+    .hour-header-cell:nth-child(2)::after {
+        content: "12a";
+    }
+
+    .hour-header-cell:nth-child(8)::after {
+        content: "6a";
+    }
+
+    .hour-header-cell:nth-child(14)::after {
+        content: "12p";
+    }
+
+    .hour-header-cell:nth-child(20)::after {
+        content: "6p";
+    }
+
+    .day-label-cell {
+        font-size: .62rem;
+    }
+
+    .profile-setup-card {
+        margin: 1rem auto;
+        padding: 1.25rem;
+    }
+
+    .profile-measurements {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .modal-overlay {
+        align-items: flex-start;
+        padding: 1rem .75rem;
+    }
+
+    .modal-card {
+        max-height: calc(100dvh - 2rem);
+        padding: 1.2rem;
     }
 }

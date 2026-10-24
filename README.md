@@ -1,5 +1,4 @@
 # Fitness-Tracker
-
 Fitness tracker is a project to track your fitness and motivate you to keep your health well. Here is a heatmap to see your progress. 
 Here is a counter to track your exercise time, then you can log it in. Here is also a assistant, who helps you to track your fitness. 
 Whole code is fully open-source, anyone can use it. Please add a api key of google gemini to make the code work, the demo is included my key.

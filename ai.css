@@ -49,6 +49,7 @@
 }
 
 .ai-chat-welcome p:not(.ai-eyebrow) {
+    max-width: 28rem;
     margin-top: .8rem;
     color: #666;
     font-size: .98rem;
@@ -189,15 +190,21 @@
 }
 
 @media (max-width: 600px) {
+    .ai-view {
+        padding-bottom: calc(62px + env(safe-area-inset-bottom));
+    }
+
     .ai-main {
-        padding: .5rem 1rem 1rem;
+        min-height: calc(100dvh - 62px);
+        padding: .5rem .85rem 1rem;
     }
 
     .ai-chat-workspace {
-        min-height: calc(100vh - 76px);
+        min-height: calc(100dvh - 138px - env(safe-area-inset-bottom));
     }
 
     .ai-chat-welcome {
-        min-height: 260px;
+        min-height: 220px;
+        padding: 1.5rem .25rem;
     }
 }
