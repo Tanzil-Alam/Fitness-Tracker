@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity Heatmap & Tracker</title>
+    <title>FitPulse | Activity Tracker</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="profile.css">
     <link rel="stylesheet" href="ai.css">
@@ -12,7 +12,6 @@
 
 <body>
 
-    <!-- Top Navigation Bar -->
     <header class="top-nav">
         <div class="nav-container">
             <nav class="nav-links">
@@ -50,7 +49,6 @@
     </header>
     <main id="workouts-view" class="app-view" data-app-view="workouts">
         <div class="main-wrapper">
-            <!-- Locked / Before Login State -->
             <div id="routine-locked"
                 style="display: none; text-align: center; border: 2px dashed #000; border-radius: 12px; padding: 3rem 1.5rem; background: #fafafa; margin-bottom: 2rem;">
                 <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🔒</div>
@@ -65,7 +63,6 @@
                     Profile & Login</a>
             </div>
 
-            <!-- Logged In: Personalized AI Daily Routine -->
             <div id="routine-unlocked" style="display: none; margin-bottom: 2rem;">
                 <div
                     style="border-bottom: 2px solid #000; padding-bottom: 0.8rem; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.5rem;">
@@ -83,23 +80,7 @@
                     </div>
                 </div>
 
-                <!-- Clickable Daily Exercise Blocks -->
                 <div id="daily-blocks-grid" class="daily-blocks-grid">
-                    <!-- Rendered dynamically by script.js -->
-                </div>
-            </div>
-
-            <!-- Monthly AI Goals Section -->
-            <div id="monthly-goals-section" class="monthly-goals-section" data-goals-section style="display:none;">
-                <div class="monthly-goals-header">
-                    <div>
-                        <h2 class="monthly-goals-title">Monthly Goals</h2>
-                        <p class="monthly-goals-subtitle" id="goals-month-label">Monthly activity targets based on your
-                            profile</p>
-                    </div>
-                </div>
-                <div id="goals-list">
-                    <!-- Rendered dynamically by script.js -->
                 </div>
             </div>
 
@@ -158,6 +139,22 @@
         </div>
     </main>
 
+    <main id="goals-view" class="app-view goals-app-view" data-app-view="goals" hidden>
+        <div class="main-wrapper">
+            <section id="monthly-goals-section" class="monthly-goals-section" data-goals-section style="display:none;">
+                <div class="monthly-goals-header">
+                    <div>
+                        <h1 class="monthly-goals-title">Monthly Goals</h1>
+                        <p class="monthly-goals-subtitle" id="goals-month-label">Monthly activity targets based on your
+                            profile</p>
+                    </div>
+                </div>
+                <div id="goals-list">
+                </div>
+            </section>
+        </div>
+    </main>
+
     <main id="profile-view" class="app-view profile-app-view" data-app-view="profile" hidden>
         <div class="banner-wrapper">
             <div class="banner-content">
@@ -178,7 +175,7 @@
                 <form id="onboarding-form">
                     <div class="form-group">
                         <label for="setup-name">Name</label>
-                        <input type="text" id="setup-name" placeholder="e.g. Jane Doe" required>
+                        <input type="text" id="setup-name" placeholder="Your name" required>
                     </div>
                     <div class="form-group">
                         <label for="setup-email">Email Address</label>
@@ -212,13 +209,9 @@
                     <span class="avatar-badge">B&W</span>
                 </div>
                 <div class="profile-meta">
-                    <h1 class="user-fullname" id="display-fullname">Jane Doe</h1>
-                    <div class="user-username" id="display-username">jdoemobbin</div>
-                    <p class="user-bio" id="display-bio">
-                        I'm a fitness enthusiast with a passion for long-distance running. My current goal is a sub-3
-                        hour
-                        marathon. Tracking my workouts to build consistent habits.
-                    </p>
+                    <h1 class="user-fullname" id="display-fullname">Athlete</h1>
+                    <div class="user-username" id="display-username">athlete</div>
+                    <p class="user-bio" id="display-bio"></p>
                     <button type="button" class="btn-edit-profile" id="open-edit-modal">Edit profile</button>
                 </div>
             </aside>
@@ -281,11 +274,11 @@
                 <form id="auth-form">
                     <div class="form-group" id="auth-name-group" style="display: none;">
                         <label for="auth-fullname">Full Name</label>
-                        <input type="text" id="auth-fullname" placeholder="Jane Doe">
+                        <input type="text" id="auth-fullname" placeholder="Your name">
                     </div>
                     <div class="form-group">
                         <label for="auth-email">Email or Username</label>
-                        <input type="text" id="auth-email" placeholder="jdoemobbin or name@example.com" required>
+                        <input type="text" id="auth-email" placeholder="Email address or username" required>
                     </div>
                     <div class="form-group">
                         <label for="auth-password">Password</label>
@@ -306,20 +299,20 @@
         <section class="ai-main">
             <div class="ai-chat-workspace" aria-label="FitPulse AI chat">
                 <div id="ai-chat-welcome" class="ai-chat-welcome">
-                    <div class="ai-orb" aria-hidden="true"></div>
-                    <h1>Good <span id="ai-greeting-time">day</span>, <span id="ai-greeting-name">Athlete</span></h1>
-                    <p>How can I <span>help you today?</span></p>
+                    <p class="ai-eyebrow">YOUR TRAINING, IN CONTEXT</p>
+                    <h1>Good <span id="ai-greeting-time">day</span>, <span id="ai-greeting-name">Athlete</span>.</h1>
+                    <p>Ask about your workouts, progress, or what to do next.</p>
                 </div>
                 <div id="ai-chat-messages" class="ai-chat-messages" aria-live="polite" aria-relevant="additions"></div>
                 <div class="ai-composer-area">
                     <div class="ai-composer">
-                        <label class="ai-composer-label" for="ai-chat-input">FitPulse AI Coach <span>·</span> Fitness
-                            guidance for your goals</label>
+                        <label class="ai-composer-label" for="ai-chat-input">FitPulse <span>·</span> Workout
+                            coach</label>
                         <form id="ai-chat-form" class="ai-chat-form">
-                            <textarea id="ai-chat-input" rows="1" maxlength="2000" placeholder="Ask me anything..."
-                                aria-label="Message the AI coach"></textarea>
+                            <textarea id="ai-chat-input" rows="1" maxlength="2000"
+                                placeholder="Ask about your training..." aria-label="Message the AI coach"></textarea>
                             <div class="ai-composer-toolbar">
-                                <span class="ai-model-chip" aria-label="AI model">✦ <span>FitPulse Coach</span></span>
+                                <span class="ai-model-chip">Training assistant</span>
                                 <button id="ai-chat-send" class="ai-send-button" type="submit"
                                     aria-label="Send message">
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -330,6 +323,7 @@
                         </form>
                     </div>
                 </div>
+            </div>
         </section>
     </main>
     <div id="tooltip" class="tooltip"></div>

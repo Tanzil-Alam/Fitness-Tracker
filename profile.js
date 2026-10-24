@@ -1,19 +1,18 @@
 (() => {
-// Profile and Heatmap Management for FitPulse
 const STORAGE_KEY_LOGS = 'minimal_fitness_logs_v3';
 const STORAGE_KEY_USER = 'fitpulse_user_profile';
 
 const DEFAULT_USER = {
-    fullname: "Jane Doe",
-    username: "jdoemobbin",
-    bio: "I'm a fitness enthusiast with a passion for long-distance running. My current goal is a sub-3 hour marathon. Tracking my workouts to build consistent habits.",
-    website: "https://mobbin.com/",
-    twitter: "@Jdddmobbin",
-    instagram: "jdoe.mobbin",
+    fullname: "Athlete",
+    username: "athlete",
+    bio: "",
+    website: "",
+    twitter: "",
+    instagram: "",
     followers: 0,
-    following: 1,
+    following: 0,
     avatar: null,
-    isLoggedIn: true
+    isLoggedIn: false
 };
 function checkUserRegistration() {
     const isRegistered = localStorage.getItem('userRegistered') === 'true';
@@ -23,13 +22,11 @@ function checkUserRegistration() {
     const bannerWrapper = document.querySelector('.banner-wrapper');
 
     if (!isRegistered) {
-        // Show login/setup form, hide profile contents
         if (loginCard) loginCard.style.display = 'block';
         if (profileSidebar) profileSidebar.style.display = 'none';
         if (profileContent) profileContent.style.display = 'none';
         if (bannerWrapper) bannerWrapper.style.display = 'none';
     } else {
-        // User exists: show profile
         if (loginCard) loginCard.style.display = 'none';
         if (profileSidebar) profileSidebar.style.display = 'block';
         if (profileContent) profileContent.style.display = 'flex';
@@ -38,7 +35,6 @@ function checkUserRegistration() {
     }
 }
 
-// Handle First-Time Form Submission
 const onboardingForm = document.getElementById('onboarding-form');
 if (onboardingForm) {
     onboardingForm.addEventListener('submit', (e) => {
@@ -49,7 +45,6 @@ if (onboardingForm) {
         const height = document.getElementById('setup-height').value.trim();
         const weight = document.getElementById('setup-weight').value.trim();
 
-        // 1. Save individual fields to localStorage
         localStorage.setItem('userName', name);
         localStorage.setItem('userEmail', email);
         localStorage.setItem('userAge', age);
@@ -57,7 +52,6 @@ if (onboardingForm) {
         localStorage.setItem('userWeight', weight);
         localStorage.setItem('userRegistered', 'true');
 
-        // 2. Immediately update currentUser and render to screen
         currentUser.fullname = name;
         currentUser.username = email ? email.split('@')[0] : name.toLowerCase().replace(/\s+/g, '');
         currentUser.isLoggedIn = true;
@@ -65,7 +59,6 @@ if (onboardingForm) {
         loadUserData();
         renderUserProfile();
 
-        // 3. Reveal profile page
         checkUserRegistration();
         window.dispatchEvent(new Event('fitpulse:user-registered'));
     });
@@ -73,7 +66,6 @@ if (onboardingForm) {
 let currentUser = { ...DEFAULT_USER };
 let logs = [];
 
-// DOM Elements
 const displayFullname = document.getElementById('display-fullname');
 const displayUsername = document.getElementById('display-username');
 const displayBio = document.getElementById('display-bio');
@@ -102,7 +94,6 @@ const authSubmitBtn = document.getElementById('btn-auth-submit');
 const tooltip = document.getElementById('tooltip');
 let isSignUpMode = false;
 
-// 24-hour Heatmap elements
 const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const dayFullNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const grid24 = document.getElementById('heatmap-grid');
@@ -116,7 +107,6 @@ function initProfile() {
     setupProfileEvents();
 }
 
-// User Profile Management - Reads from both login.html and custom profile
 function loadUserData() {
     const reg = localStorage.getItem('userRegistered');
     const name = localStorage.getItem('userName');
@@ -137,7 +127,7 @@ function loadUserData() {
 
     if (reg === 'true' && name) {
         currentUser.fullname = name;
-        currentUser.username = email ? email.split('@')[0] : (name.toLowerCase().replace(/\s+/g, '') || 'jdoemobbin');
+        currentUser.username = email ? email.split('@')[0] : (name.toLowerCase().replace(/\s+/g, '') || 'athlete');
         currentUser.bio = (bio && bio !== 'ADD BIO') ? bio : currentUser.bio;
         if (avatar && avatar !== 'default-profile.png') {
             currentUser.avatar = avatar;
@@ -156,25 +146,25 @@ function saveUserData() {
 }
 
 function renderUserProfile() {
-    displayFullname.textContent = currentUser.fullname || 'Jane Doe';
-    displayUsername.textContent = currentUser.username || 'jdoemobbin';
+    displayFullname.textContent = currentUser.fullname || 'Athlete';
+    displayUsername.textContent = currentUser.username || 'athlete';
     displayBio.textContent = currentUser.bio || '';
 
     if (displayWebsite) {
-        displayWebsite.textContent = currentUser.website || 'https://mobbin.com/';
+        displayWebsite.textContent = currentUser.website || '';
         displayWebsite.href = currentUser.website || '#';
     }
     if (displayTwitter) {
-        displayTwitter.textContent = currentUser.twitter || '@Jdddmobbin';
+        displayTwitter.textContent = currentUser.twitter || '';
         displayTwitter.href = currentUser.twitter ? `https://twitter.com/${currentUser.twitter.replace('@', '')}` : '#';
     }
     if (displayInstagram) {
-        displayInstagram.textContent = currentUser.instagram || 'jdoe.mobbin';
+        displayInstagram.textContent = currentUser.instagram || '';
         displayInstagram.href = currentUser.instagram ? `https://instagram.com/${currentUser.instagram}` : '#';
     }
 
     if (displayFollowers) displayFollowers.textContent = currentUser.followers ?? 0;
-    if (displayFollowing) displayFollowing.textContent = currentUser.following ?? 1;
+    if (displayFollowing) displayFollowing.textContent = currentUser.following ?? 0;
 
     if (currentUser.avatar && userAvatarImg) {
         userAvatarImg.src = currentUser.avatar;
@@ -196,7 +186,6 @@ function loadLogs() {
     }
 }
 
-// Build Year Consistency Heatmap (Months across top, Mon/Wed/Fri on left)
 function renderYearConsistencyHeatmap() {
     const container = document.getElementById('year-heatmap');
     if (!container) return;
@@ -205,10 +194,9 @@ function renderYearConsistencyHeatmap() {
     const today = new Date();
     const months = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
 
-    // Header row for months
     const monthHeader = document.createElement('div');
     monthHeader.className = 'year-month-labels';
-    monthHeader.innerHTML = '<div></div>'; // empty for day label column
+    monthHeader.innerHTML = '<div></div>';
     months.forEach(m => {
         const span = document.createElement('div');
         span.textContent = m;
@@ -216,11 +204,9 @@ function renderYearConsistencyHeatmap() {
     });
     container.appendChild(monthHeader);
 
-    // Body with day labels on left and 52-week column grid
     const gridBody = document.createElement('div');
     gridBody.className = 'year-grid-body';
 
-    // Day labels
     const dayLabelsDiv = document.createElement('div');
     dayLabelsDiv.className = 'year-day-labels';
     dayLabelsDiv.innerHTML = `
@@ -234,20 +220,17 @@ function renderYearConsistencyHeatmap() {
     `;
     gridBody.appendChild(dayLabelsDiv);
 
-    // Prepare date lookup for logs
     const logDateMap = {};
     logs.forEach(l => {
-        let dt;
-        if (l.timestamp) {
-            dt = new Date(l.timestamp);
-        } else {
-            dt = new Date();
-        }
+        const timestamp = Number(l.timestamp);
+        const dt = Number.isFinite(timestamp) && timestamp > 0
+            ? new Date(timestamp)
+            : new Date(l.date);
+        if (Number.isNaN(dt.getTime())) return;
         const dateKey = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-        logDateMap[dateKey] = (logDateMap[dateKey] || 0) + (l.seconds || 30);
+        logDateMap[dateKey] = (logDateMap[dateKey] || 0) + Math.max(0, Number(l.seconds) || 0);
     });
 
-    // Generate 48 weeks
     const weeksContainer = document.createElement('div');
     weeksContainer.className = 'year-weeks-container';
 
@@ -255,7 +238,6 @@ function renderYearConsistencyHeatmap() {
     const startDate = new Date();
     startDate.setDate(today.getDate() - (numWeeks * 7));
 
-    // Align to start of week (Sunday)
     startDate.setDate(startDate.getDate() - startDate.getDay());
 
     for (let w = 0; w < numWeeks; w++) {
@@ -273,22 +255,15 @@ function renderYearConsistencyHeatmap() {
             const totalSec = logDateMap[dateKey] || 0;
 
             let lvl = 'lvl-0';
-            if (cellDate > today) {
-                lvl = 'lvl-0';
-            } else if (totalSec > 0) {
+            if (cellDate <= today && totalSec > 0) {
                 if (totalSec >= 1200) lvl = 'lvl-3';
                 else if (totalSec >= 300) lvl = 'lvl-2';
                 else lvl = 'lvl-1';
-            } else {
-                // Populate sample consistency pattern for demo consistency matching design
-                if ((d === 1 || d === 3 || d === 5) && cellDate <= today) {
-                    lvl = (w % 3 === 0) ? 'lvl-3' : (w % 2 === 0 ? 'lvl-2' : 'lvl-1');
-                }
             }
 
             cell.classList.add(lvl);
             cell.dataset.date = cellDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-            cell.dataset.activity = totalSec > 0 ? `${Math.round(totalSec / 60)} min logged` : (lvl !== 'lvl-0' ? 'Active session' : 'No workout');
+            cell.dataset.activity = totalSec > 0 ? `${Math.round(totalSec / 60)} min logged` : 'No workout';
 
             cell.addEventListener('mouseover', (e) => {
                 tooltip.innerHTML = `<strong>${cell.dataset.date}</strong><br>${cell.dataset.activity}`;
@@ -311,7 +286,6 @@ function renderYearConsistencyHeatmap() {
     container.appendChild(gridBody);
 }
 
-// Render Workout Activities Breakdown & Progress
 function renderWorkoutActivities() {
     const summary = document.getElementById('activities-summary');
     const fill = document.getElementById('activity-fill');
@@ -325,7 +299,7 @@ function renderWorkoutActivities() {
         counts[l.name] = (counts[l.name] || 0) + 1;
     });
 
-    let topExercise = 'Running';
+    let topExercise = 'No workouts yet';
     let maxCount = 0;
     for (const [name, count] of Object.entries(counts)) {
         if (count > maxCount) {
@@ -335,18 +309,38 @@ function renderWorkoutActivities() {
     }
 
     const totalMinutes = Math.round(totalSeconds / 60);
-    const progressPct = Math.min(100, Math.max(25, totalLogs > 0 ? (totalLogs * 10) : 78));
+    const progressPct = Math.min(100, totalLogs * 10);
     fill.style.width = `${progressPct}%`;
 
+    const workoutDates = new Set(logs.map(log => {
+        const timestamp = Number(log.timestamp);
+        const date = Number.isFinite(timestamp) && timestamp > 0
+            ? new Date(timestamp)
+            : new Date(log.date);
+        return Number.isNaN(date.getTime())
+            ? null
+            : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }).filter(Boolean));
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const streakStart = new Date(today);
+    if (!workoutDates.has(todayKey)) streakStart.setDate(streakStart.getDate() - 1);
+    let streak = 0;
+    while (true) {
+        const dateKey = `${streakStart.getFullYear()}-${String(streakStart.getMonth() + 1).padStart(2, '0')}-${String(streakStart.getDate()).padStart(2, '0')}`;
+        if (!workoutDates.has(dateKey)) break;
+        streak++;
+        streakStart.setDate(streakStart.getDate() - 1);
+    }
+
     summary.innerHTML = `
-        <div>Total Sessions: <strong>${totalLogs || 14}</strong></div>
-        <div>Total Time: <strong>${totalMinutes || 185} mins</strong></div>
+        <div>Total Sessions: <strong>${totalLogs}</strong></div>
+        <div>Total Time: <strong>${totalMinutes} mins</strong></div>
         <div>Primary Activity: <strong>${topExercise}</strong></div>
-        <div>Current Streak: <strong>5 days</strong></div>
+        <div>Current Streak: <strong>${streak} days</strong></div>
     `;
 }
 
-// 24-Hour Weekly Heatmap (Moved from Home)
 function getHourRangeLabel(h) {
     const startHour12 = h % 12 === 0 ? 12 : h % 12;
     const startAmPm = h < 12 ? 'AM' : 'PM';
@@ -463,9 +457,7 @@ function formatDisplayDuration(s) {
     return remSec > 0 ? `${m}m ${remSec}s` : `${m}m`;
 }
 
-// Events & Modals
 function setupProfileEvents() {
-    // Edit Profile Modal
     openEditBtn.addEventListener('click', () => {
         document.getElementById('input-fullname').value = currentUser.fullname || '';
         document.getElementById('input-username').value = currentUser.username || '';
@@ -488,217 +480,57 @@ function setupProfileEvents() {
         editModal.classList.remove('active');
     });
 
-    // Login / Logout / Register
-if (btnAuthToggle) btnAuthToggle.addEventListener('click', () => {
-    if (currentUser.isLoggedIn) {
-        // Logout
-        currentUser.isLoggedIn = false;
-        localStorage.removeItem('userRegistered');
+    if (btnAuthToggle) {
+        btnAuthToggle.addEventListener('click', () => {
+            if (currentUser.isLoggedIn) {
+                currentUser.isLoggedIn = false;
+                localStorage.removeItem('userRegistered');
+                saveUserData();
+                renderUserProfile();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+    }
+
+    closeAuthBtn.addEventListener('click', () => {
+        authModal.classList.remove('active');
+    });
+
+    authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const emailOrUser = document.getElementById('auth-email').value.trim();
+        const fullNameInput = document.getElementById('auth-fullname').value.trim();
+
+        currentUser.isLoggedIn = true;
+        if (fullNameInput) currentUser.fullname = fullNameInput;
+        if (emailOrUser) currentUser.username = emailOrUser.split('@')[0];
+        localStorage.setItem('userRegistered', 'true');
         saveUserData();
         renderUserProfile();
-    } else {
-        // Go to login page or open modal
-        window.location.href = 'login.html';
-    }
-});
-
-closeAuthBtn.addEventListener('click', () => {
-    authModal.classList.remove('active');
-});
-
-authForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const emailOrUser = document.getElementById('auth-email').value.trim();
-    const fullNameInput = document.getElementById('auth-fullname').value.trim();
-
-    currentUser.isLoggedIn = true;
-    if (fullNameInput) {
-        currentUser.fullname = fullNameInput;
-    }
-    if (emailOrUser) {
-        currentUser.username = emailOrUser.split('@')[0];
-    }
-    localStorage.setItem('userRegistered', 'true');
-    saveUserData();
-    renderUserProfile();
-    authModal.classList.remove('active');
-    window.dispatchEvent(new Event('fitpulse:user-registered'));
-});
-
-// Tooltip for 24-hr heatmap
-if (grid24) {
-    grid24.addEventListener('mouseover', (e) => {
-        const cell = e.target.closest('.cell');
-        if (!cell) return;
-        const sec = parseInt(cell.dataset.seconds || 0, 10);
-        const timeStr = sec > 0 ? formatDisplayDuration(sec) : '0m';
-        const dayName = cell.dataset.dayName || '';
-        const hourLabel = cell.dataset.hourLabel || '';
-        tooltip.innerHTML = `${dayName}, ${hourLabel} · ${timeStr}`;
-        tooltip.style.display = 'block';
+        authModal.classList.remove('active');
+        window.dispatchEvent(new Event('fitpulse:user-registered'));
     });
 
-    grid24.addEventListener('mousemove', (e) => {
-        tooltip.style.left = (e.clientX + 14) + 'px';
-        tooltip.style.top = (e.clientY + 14) + 'px';
-    });
-
-    grid24.addEventListener('mouseout', (e) => {
-        if (e.target.closest('.cell')) {
-            tooltip.style.display = 'none';
-        }
-    });
-}
-
-// AI Assistant
-setupAiAssistant();
-}
-
-// AI Assistant with Vercel API, local fallback, and chat persistence
-function setupAiAssistant() {
-    if (window.fitPulseChatInitialized) return;
-
-    const aiBtn = document.getElementById("ai-assistant-btn");
-    const aiOverlay = document.getElementById("ai-chatbox-overlay");
-    const aiClose = document.getElementById("close-ai-chat");
-    const aiSend = document.getElementById("ai-chat-send");
-    const aiInput = document.getElementById("ai-chat-input");
-    const aiMessages = document.getElementById("ai-chat-messages");
-
-    if (!aiBtn || !aiOverlay) return;
-
-    // ---- Chat Persistence (sessionStorage) ----
-    const CHAT_STORAGE_KEY = 'fitpulse_chat_history';
-
-    function saveChatHistory() {
-        if (!aiMessages) return;
-        const msgs = [];
-        aiMessages.querySelectorAll('.ai-msg-user, .ai-msg-bot').forEach(el => {
-            msgs.push({
-                text: el.innerText,
-                sender: el.classList.contains('ai-msg-user') ? 'user' : 'bot'
-            });
-        });
-        sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
-    }
-
-    function restoreChatHistory() {
-        if (!aiMessages) return;
-        try {
-            const saved = sessionStorage.getItem(CHAT_STORAGE_KEY);
-            if (!saved) return;
-            const msgs = JSON.parse(saved);
-            if (!msgs.length) return;
-            // Clear the default welcome message and replace with saved history
-            aiMessages.innerHTML = '';
-            msgs.forEach(m => {
-                const div = document.createElement('div');
-                div.className = m.sender === 'user' ? 'ai-msg-user' : 'ai-msg-bot';
-                div.innerText = m.text;
-                aiMessages.appendChild(div);
-            });
-            aiMessages.scrollTop = aiMessages.scrollHeight;
-        } catch (_) {}
-    }
-
-    // Restore chat on page load
-    restoreChatHistory();
-
-    aiBtn.addEventListener("click", () => {
-        aiOverlay.style.display = "flex";
-    });
-
-    aiClose.addEventListener("click", () => {
-        aiOverlay.style.display = "none";
-    });
-
-    const appendMessage = (text, sender) => {
-        const msgDiv = document.createElement("div");
-        msgDiv.className = sender === "user" ? "ai-msg-user" : "ai-msg-bot";
-        msgDiv.innerText = text;
-        aiMessages.appendChild(msgDiv);
-        aiMessages.scrollTop = aiMessages.scrollHeight;
-        saveChatHistory();
-    };
-
-    const sendToGemini = async (userText) => {
-        appendMessage(userText, "user");
-        aiInput.value = "";
-
-        const loadingDiv = document.createElement("div");
-        loadingDiv.className = "ai-msg-bot";
-        loadingDiv.innerText = "Thinking...";
-        aiMessages.appendChild(loadingDiv);
-        aiMessages.scrollTop = aiMessages.scrollHeight;
-
-        // Try Vercel Serverless Function first
-        try {
-            const apiRes = await fetch('/api/chat', {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userText })
-            });
-
-            if (apiRes.status !== 404) {
-                const apiData = await apiRes.json();
-                if (loadingDiv.parentNode) aiMessages.removeChild(loadingDiv);
-                if (apiRes.ok && apiData.reply) {
-                    appendMessage(apiData.reply, "bot");
-                    return;
-                } else if (apiData.error) {
-                    appendMessage(apiData.error, "bot");
-                    return;
-                }
-            }
-        } catch (e) { }
-
-        // Fallback key check
-        const apiKey = window.CONFIG?.GEMINI_API_KEY || localStorage.getItem('GEMINI_API_KEY');
-        if (!apiKey) {
-            if (loadingDiv.parentNode) aiMessages.removeChild(loadingDiv);
-            appendMessage("AI assistant requires GEMINI_API_KEY. Configure it on Vercel or in config.js.", "bot");
-            return;
-        }
-
-        const uName = localStorage.getItem('userName') || 'User';
-        const uAge = localStorage.getItem('userAge') ? `${localStorage.getItem('userAge')} years old` : 'unspecified age';
-        const uHeight = localStorage.getItem('userHeight') ? `${localStorage.getItem('userHeight')} cm` : 'unspecified height';
-        const uWeight = localStorage.getItem('userWeight') ? `${localStorage.getItem('userWeight')} kg` : 'unspecified weight';
-
-        const systemPrompt = `You are the AI assistant inside FitPulse, an Activity Heatmap & Fitness Tracker app. You are speaking to ${uName} (${uAge}, Height: ${uHeight}, Weight: ${uWeight}). Keep answers short and fitness-focused (2-3 sentences max).`;
-        try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: systemPrompt }] },
-                    contents: [{ role: "user", parts: [{ text: userText }] }]
-                })
-            });
-            const data = await res.json();
-            if (loadingDiv.parentNode) aiMessages.removeChild(loadingDiv);
-            if (data.candidates && data.candidates[0].content) {
-                appendMessage(data.candidates[0].content.parts[0].text, "bot");
-            } else {
-                appendMessage("Sorry, could not process request.", "bot");
-            }
-        } catch (err) {
-            if (loadingDiv.parentNode) aiMessages.removeChild(loadingDiv);
-            appendMessage("Error connecting to Gemini API.", "bot");
-        }
-    };
-
-    if (aiSend && aiInput) {
-        aiSend.addEventListener("click", () => {
-            const text = aiInput.value.trim();
-            if (text) sendToGemini(text);
+    if (grid24) {
+        grid24.addEventListener('mouseover', (e) => {
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+            const sec = parseInt(cell.dataset.seconds || 0, 10);
+            const timeStr = sec > 0 ? formatDisplayDuration(sec) : '0m';
+            const dayName = cell.dataset.dayName || '';
+            const hourLabel = cell.dataset.hourLabel || '';
+            tooltip.innerHTML = `${dayName}, ${hourLabel} · ${timeStr}`;
+            tooltip.style.display = 'block';
         });
 
-        aiInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                const text = aiInput.value.trim();
-                if (text) sendToGemini(text);
-            }
+        grid24.addEventListener('mousemove', (e) => {
+            tooltip.style.left = `${e.clientX + 14}px`;
+            tooltip.style.top = `${e.clientY + 14}px`;
+        });
+
+        grid24.addEventListener('mouseout', (e) => {
+            if (e.target.closest('.cell')) tooltip.style.display = 'none';
         });
     }
 }

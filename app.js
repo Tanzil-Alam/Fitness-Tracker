@@ -11,7 +11,7 @@
     };
 
     const showView = (route, updateHistory = false) => {
-        const viewName = route === 'profile' || route === 'ai' ? route : 'workouts';
+        const viewName = ['profile', 'ai', 'goals'].includes(route) ? route : 'workouts';
         views.forEach(view => {
             view.hidden = view.dataset.appView !== viewName;
         });
@@ -29,16 +29,12 @@
             if (window.location.hash !== hash) window.history.pushState(null, '', hash);
         }
 
-        if (route === 'goals') {
-            requestAnimationFrame(() => {
-                document.querySelector('[data-goals-section]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-        } else {
-            window.scrollTo(0, 0);
-        }
+        window.scrollTo(0, 0);
 
         if (viewName === 'workouts') {
             if (typeof renderDailyRoutine === 'function') renderDailyRoutine();
+        }
+        if (viewName === 'workouts' || viewName === 'goals') {
             if (typeof renderMonthlyGoals === 'function') renderMonthlyGoals();
         }
 
@@ -76,13 +72,4 @@
         greetingTime.textContent = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
     }
 
-    document.querySelectorAll('[data-prompt]').forEach(button => {
-        button.addEventListener('click', () => {
-            const input = document.getElementById('ai-chat-input');
-            if (!input) return;
-            input.value = button.dataset.prompt || '';
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.focus();
-        });
-    });
 })();

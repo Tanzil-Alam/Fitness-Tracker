@@ -16,39 +16,6 @@
     padding: 0;
 }
 
-#ai-chat-messages::-webkit-scrollbar {
-    width: 6px;
-}
-
-#ai-chat-messages::-webkit-scrollbar-track {
-    background: #0d0d0d;
-}
-
-#ai-chat-messages::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 3px;
-}
-
-.ai-msg-user {
-    align-self: flex-end;
-    background: #ffffff;
-    color: #000000;
-    padding: 10px 14px;
-    border-radius: 8px;
-    max-width: 85%;
-    word-break: break-word;
-}
-
-.ai-msg-bot {
-    align-self: flex-start;
-    background: #222222;
-    color: #ffffff;
-    padding: 10px 14px;
-    border-radius: 8px;
-    max-width: 85%;
-    word-break: break-word;
-}
-
 body {
     background-color: var(--bg-page);
     color: var(--text-main);
@@ -462,10 +429,6 @@ body {
 }
 
 @media (max-width: 860px) {
-    body {
-        padding: 1.2rem;
-    }
-
     .exercise-log-box {
         grid-template-columns: 1fr;
         gap: 1rem;
@@ -478,7 +441,6 @@ body {
     }
 }
 
-/* Top Navigation Bar */
 .top-nav {
     border-bottom: 1px solid #e4e4e7;
     background: #ffffff;
@@ -536,20 +498,6 @@ body {
     background: #000000;
 }
 
-.ai-chat-nav-link {
-    appearance: none;
-    border: 0;
-    background: transparent;
-    font-family: inherit;
-    cursor: pointer;
-}
-
-.ai-chat-nav-link:focus-visible {
-    outline: 2px solid #000;
-    outline-offset: -4px;
-}
-
-/* Daily Routine Blocks */
 .daily-blocks-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -611,7 +559,7 @@ body {
 }
 
 .routine-badge.done {
-    background: #10b981;
+    background: #000;
     color: #ffffff;
 }
 
@@ -640,7 +588,6 @@ body {
     font-size: 0.75rem;
 }
 
-/* ===================== Monthly Goals Section ===================== */
 .monthly-goals-section {
     border-top: 2px solid #000;
     padding-top: 1.5rem;
@@ -684,10 +631,6 @@ body {
     margin-bottom: 0;
 }
 
-.goal-card .goal-name {
-    text-transform: capitalize;
-}
-
 .goal-card-top {
     display: flex;
     justify-content: space-between;
@@ -726,27 +669,7 @@ body {
 }
 
 .goal-progress-bar-fill.complete {
-    background: #10b981;
-}
-
-.goals-locked-msg {
-    text-align: center;
-    border: 2px dashed #000;
-    border-radius: 12px;
-    padding: 2rem 1.5rem;
-    background: #fafafa;
-}
-
-.goals-locked-msg h3 {
-    font-size: 1.1rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    margin-bottom: 0.4rem;
-}
-
-.goals-locked-msg p {
-    font-size: 0.85rem;
-    color: #71717a;
+    background: #000;
 }
 
 @media (max-width: 520px) {
