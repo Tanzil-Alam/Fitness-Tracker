@@ -179,6 +179,11 @@ function renderLogs() {
         box.className = 'exercise-log-box';
 
         const imgUrl = EXERCISE_IMAGES[item.name] || EXERCISE_IMAGES['CUSTOM'] || '';
+        const amount = Number(item.reps) > 0
+            ? `${Number(item.reps).toLocaleString()} reps`
+            : Number(item.distanceKm) > 0
+                ? `${Number(item.distanceKm).toFixed(1)} km`
+                : '';
         const imageHolderHtml = imgUrl
             ? `<img src="${imgUrl}" alt="${item.name}" onerror="this.parentElement.innerHTML='<div class=\\'box-image-placeholder\\'>IMAGE</div>'">`
             : `<div class="box-image-placeholder">IMAGE</div>`;
@@ -199,6 +204,7 @@ function renderLogs() {
                     <span>Date:</span>
                     <span>${item.date}</span>
                 </div>
+                ${amount ? `<div class="meta-row"><span>Completed:</span><span>${amount}</span></div>` : ''}
             </div>
             <button type="button" class="delete-log-btn" title="Delete" onclick="deleteLog('${item.id}')">&times;</button>
         `;
@@ -212,6 +218,7 @@ window.deleteLog = function (id) {
     saveLogs();
     renderLogs();
     updateHeatmapActivity();
+    reconcileDailyCompletions();
     renderMonthlyGoals();
 };
 
@@ -306,6 +313,7 @@ function updateWorkoutAmountField() {
     workoutAmountRow.hidden = !amountType;
     workoutAmount.required = Boolean(amountType);
     workoutAmount.value = '';
+    workoutAmount.step = amountType === 'distanceKm' ? '0.1' : '1';
     if (amountType === 'distanceKm') {
         workoutAmountLabel.textContent = 'Distance completed (km)';
         workoutAmountHelp.textContent = 'Enter the distance you ran, for example 2.5 km.';
@@ -367,7 +375,7 @@ function logWorkout() {
         : ['Push up', 'Squats', 'Pull-ups', 'Deadlift'].includes(name)
             ? 'reps'
             : null;
-    if (amountType && (!Number.isFinite(amount) || amount <= 0)) {
+    if (amountType && (!Number.isFinite(amount) || amount <= 0 || (amountType === 'reps' && !Number.isInteger(amount)))) {
         alert(`Enter the ${amountType === 'distanceKm' ? 'distance in km' : 'number of reps'} you completed.`);
         workoutAmount?.focus();
         return;
@@ -680,7 +688,7 @@ function getFallbackMonthlyPlan() {
         { name: 'Push up', target: 1000, unit: 'reps' },
         { name: 'Squats', target: 1000, unit: 'reps' },
         { name: 'Running', target: 100, unit: 'km' },
-        { name: 'Plank', target: 600, unit: 'minutes' }
+        { name: 'Plank', target: 120, unit: 'minutes' }
     ];
 }
 
@@ -712,8 +720,14 @@ function normalizeGeneratedPlans(value) {
             (unit === 'minutes' && item.name !== 'Plank')) {
             throw new Error('AI returned a goal with the wrong measurement.');
         }
-        return { name: item.name, target: Math.round(target), unit };
+        return { name: item.name, target: unit === 'km' ? Math.round(target * 10) / 10 : Math.round(target), unit };
     });
+    const hasRequiredGoals = [
+        monthlyGoals.some(goal => goal.name === 'Push up' && goal.unit === 'reps'),
+        monthlyGoals.some(goal => goal.name === 'Squats' && goal.unit === 'reps'),
+        monthlyGoals.some(goal => goal.name === 'Running' && goal.unit === 'km')
+    ].every(Boolean);
+    if (!hasRequiredGoals) throw new Error('AI plan is missing a core monthly goal.');
 
     return { dailyWorkouts, monthlyGoals };
 }
@@ -737,7 +751,9 @@ function getPlanRequestData() {
     };
     const recentWorkouts = logs.slice(0, 40).map(log => ({
         name: String(log.name || '').slice(0, 40),
-        date: log.timestamp ? new Date(Number(log.timestamp)).toISOString().slice(0, 10) : '',
+        date: Number.isFinite(Number(log.timestamp)) && Number(log.timestamp) > 0
+            ? new Date(Number(log.timestamp)).toISOString().slice(0, 10)
+            : '',
         durationMinutes: Math.round((Number(log.seconds) || 0) / 60),
         reps: Number(log.reps) || 0,
         distanceKm: Number(log.distanceKm) || 0
@@ -836,6 +852,24 @@ function getPersonalizedRoutine() {
         }));
     }
     return getFallbackDailyPlan().map((task, index) => ({ ...task, id: `task_${index + 1}` }));
+}
+
+function reconcileDailyCompletions() {
+    const todayLogs = logs.filter(log => {
+        const timestamp = Number(log.timestamp);
+        if (!Number.isFinite(timestamp)) return false;
+        return getLocalDateKey(new Date(timestamp)) === getLocalDateKey(new Date());
+    });
+    const completed = [];
+    getPersonalizedRoutine().forEach(task => {
+        const matchingIndex = todayLogs.findIndex(log => log.name === task.name);
+        if (matchingIndex !== -1) {
+            completed.push(task.id);
+            todayLogs.splice(matchingIndex, 1);
+        }
+    });
+    localStorage.setItem(TODAY_DATE_KEY, JSON.stringify(completed));
+    renderDailyRoutine();
 }
 
 function renderDailyRoutine() {
